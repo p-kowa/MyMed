@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Interner Speicher: /data/data/com.example.mymed/files/ -->
+    <files-path name="medication_images" path="medication_images/" />
+
+    <!-- Cache-Verzeichnis: /data/data/com.example.mymed/cache/ -->
+    <!-- Wird für temporäre Kamera-Fotos beim ML Kit Scan verwendet -->
+    <cache-path name="camera_temp" path="." />
+
+    <!-- Externer Cache (falls Gerät dorthin schreibt) -->
+    <external-cache-path name="camera_temp_external" path="." />
+</paths>
+

@@ -1,0 +1,47 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!--
+        Pille / Kapsel-Icon
+        Die Gruppe wird um -40° rotiert → Pille zeigt von unten-links nach oben-rechts
+        wie im Designer-Bild
+    -->
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:rotation="-40">
+
+        <!-- Schatten (leicht nach unten versetzt, halbtransparent) -->
+        <path
+            android:fillColor="#35000000"
+            android:pathData="M36,44 L72,44 A15,15 0 0,1 72,74 L36,74 A15,15 0 0,1 36,44 Z" />
+
+        <!-- Linke Hälfte der Pille (unteres Ende nach Rotation) - reines Weiß -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M54,39 L36,39 A15,15 0 0,1 36,69 L54,69 Z" />
+
+        <!-- Rechte Hälfte der Pille (oberes Ende nach Rotation) - Creme/Elfenbein -->
+        <path
+            android:fillColor="#FFF8E1"
+            android:pathData="M54,39 L72,39 A15,15 0 0,1 72,69 L54,69 Z" />
+
+        <!-- Goldene Trennlinie in der Mitte (Farbe des Hintergrunds) -->
+        <path
+            android:strokeColor="#E09020"
+            android:strokeWidth="3"
+            android:fillColor="#00000000"
+            android:pathData="M54,39 L54,69" />
+
+        <!-- Glanz-Highlight oben (macht die Pille 3D) -->
+        <path
+            android:fillColor="#20FFFFFF"
+            android:pathData="M36,39 L72,39 A15,15 0 0,1 72,49 L36,49 Z" />
+
+    </group>
+
+</vector>
