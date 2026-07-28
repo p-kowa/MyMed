@@ -139,6 +139,10 @@ object AlarmScheduler {
             )
             pi?.let { alarmManager.cancel(it) }
         }
+        // Sicherheitsnetz: Snooze-Alarm hat eine eigene ID (9999) außerhalb
+        // des obigen Bereichs - explizit mit abbrechen, damit keine
+        // "Geister-Alarme" von früheren Snooze-Tests übrig bleiben.
+        SnoozeManager.cancelSnooze(context)
     }
 
     suspend fun rescheduleFromDb(context: Context) {

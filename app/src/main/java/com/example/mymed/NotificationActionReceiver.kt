@@ -29,6 +29,8 @@ class NotificationActionReceiver : BroadcastReceiver() {
 
                 // Alarm-Sound + Vibration SOFORT stoppen
                 AlarmSoundManager.stop(context)
+                // Alle genommen → kein Snooze mehr nötig
+                SnoozeManager.cancelSnooze(context)
 
                 val pendingResult = goAsync()
                 CoroutineScope(Dispatchers.IO).launch {

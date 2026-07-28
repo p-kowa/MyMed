@@ -92,6 +92,14 @@ class MedicationViewModel(
                         takenAt = System.currentTimeMillis()
                     )
                 )
+                // Wenn dadurch ALLE Medikamente genommen wurden:
+                // pendenten Snooze-Alarm abbrechen (nichts mehr zu erinnern)
+                val nowAllTaken = medications.value.all {
+                    it.id == id || it.isChecked
+                }
+                if (nowAllTaken) {
+                    SnoozeManager.cancelSnooze(app)
+                }
             }
         }
     }
