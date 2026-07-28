@@ -16,27 +16,27 @@ import androidx.core.app.NotificationCompat
 /**
  * AlarmNotificationManager
  *
- * Zeigt eine "Alarm-artige" Notification - ähnlich einem Wecker:
- * - Erscheint als Vollbild auf dem Sperrbildschirm
- * - Hohe Priorität (Heads-Up: erscheint über andere Apps)
- * - Alarm-Sound
+ * Shows an alarm-style notification similar to a clock alarm:
+ * - Full-screen on the lock screen
+ * - High priority (heads-up over other apps)
+ * - Alarm sound
  * - Vibration
- * - Action-Buttons: "✅ Alle genommen" und "⏰ Snooze"
+ * - Action buttons: "✅ All taken" and "⏰ Snooze"
  */
 object AlarmNotificationManager {
 
     const val ALARM_NOTIFICATION_ID = 2001
     const val ALARM_CHANNEL_ID = "medication_alarm_channel"
 
-    // Action-Strings: eindeutige Namen für Button-Aktionen
+    // Action strings: unique names for button actions
     const val ACTION_ALL_TAKEN = "com.example.mymed.ACTION_ALL_TAKEN"
     const val ACTION_SNOOZE    = "com.example.mymed.ACTION_SNOOZE"
 
     /**
-     * Notification Channel erstellen (einmalig nötig, sicher mehrfach aufrufbar)
+     * Creates the notification channel (required once, safe to call multiple times).
      *
-     * Channel = Kategorie für Notifications
-     * Jeder Channel hat eigene Einstellungen (Sound, Vibration, Priorität)
+     * Channel = category for notifications.
+     * Each channel has its own settings (sound, vibration, priority).
      */
     fun createAlarmChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -50,7 +50,7 @@ object AlarmNotificationManager {
             val channel = NotificationChannel(
                 ALARM_CHANNEL_ID,
                 "Medikamenten-Alarm",
-                NotificationManager.IMPORTANCE_HIGH  // HIGH = Heads-Up + Sound
+                NotificationManager.IMPORTANCE_HIGH  // HIGH = heads-up + sound
             ).apply {
                 description = "Erinnerung zur Medikamenteneinnahme"
                 setSound(alarmSound, audioAttributes)
@@ -66,17 +66,17 @@ object AlarmNotificationManager {
     }
 
     /**
-     * Alarm-Notification anzeigen
+     * Displays the alarm notification.
      *
-     * @param snoozeMinutes Aktuelle Snooze-Zeit (für Button-Label)
-     * @param canSnooze     Snooze noch verfügbar?
+     * @param snoozeMinutes Current snooze duration (for button label)
+     * @param canSnooze     Whether snooze is still available
      */
     fun showAlarmNotification(context: Context, snoozeMinutes: Int, canSnooze: Boolean) {
         createAlarmChannel(context)
 
-        // --- PendingIntents für Actions ---
+        // --- PendingIntents for actions ---
 
-        // Tippen auf Notification → App öffnen
+        // Tap notification -> open app
         val openAppIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra("SHOW_REMINDER", true)
@@ -86,7 +86,7 @@ object AlarmNotificationManager {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Button "✅ Alle genommen"
+        // "✅ All taken" button
         val allTakenIntent = Intent(context, NotificationActionReceiver::class.java).apply {
             action = ACTION_ALL_TAKEN
         }
@@ -95,7 +95,7 @@ object AlarmNotificationManager {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Button "⏰ Snooze"
+        // "⏰ Snooze" button
         val snoozeIntent = Intent(context, NotificationActionReceiver::class.java).apply {
             action = ACTION_SNOOZE
         }
@@ -104,37 +104,37 @@ object AlarmNotificationManager {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Vollbild-Intent: zeigt auf Sperrbildschirm wie ein Wecker
+        // Full-screen intent: appears on lock screen like an alarm
         val fullScreenIntent = PendingIntent.getActivity(
             context, 3, openAppIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // --- Notification bauen ---
+        // --- Build notification ---
         val notification = NotificationCompat.Builder(context, ALARM_CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle("💊 Zeit für deine Medikamente!")
             .setContentText("Tippe um die Liste zu öffnen")
             .setStyle(NotificationCompat.BigTextStyle()
                 .bigText("Es ist Zeit deine Medikamente einzunehmen.\nBitte überprüfe die Liste."))
-            .setPriority(NotificationCompat.PRIORITY_MAX)  // MAX = Heads-Up
+            .setPriority(NotificationCompat.PRIORITY_MAX)  // MAX = heads-up
             .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)  // Auf Sperrbildschirm sichtbar
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)  // Visible on lock screen
             .setContentIntent(openAppPendingIntent)
-            .setFullScreenIntent(fullScreenIntent, true)  // ← Vollbild wie Wecker!
-            .setAutoCancel(false)  // Bleibt bis User reagiert
-            .setOngoing(false)     // Kann weggewischt werden
-            // Alarm-Sound (aus Channel, aber nochmal für alte Android-Versionen)
+            .setFullScreenIntent(fullScreenIntent, true)  // Full-screen like an alarm
+            .setAutoCancel(false)  // Stays until user reacts
+            .setOngoing(false)     // Can be dismissed by swipe
+            // Alarm sound (from channel, repeated for older Android versions)
             .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM))
             .setVibrate(longArrayOf(0, 500, 200, 500, 200, 500))
-            // Action-Buttons
+            // Action buttons
             .addAction(
                 android.R.drawable.ic_menu_close_clear_cancel,
                 "✅ Alle genommen",
                 allTakenPending
             )
             .apply {
-                // Snooze nur anzeigen wenn noch verfügbar
+                // Show Snooze only when available
                 if (canSnooze) {
                     addAction(
                         android.R.drawable.ic_lock_idle_alarm,
@@ -148,12 +148,12 @@ object AlarmNotificationManager {
         val manager = context.getSystemService(NotificationManager::class.java)
         manager.notify(ALARM_NOTIFICATION_ID, notification)
 
-        // Vibration zusätzlich auslösen (falls Channel-Vibration nicht reicht)
+        // Trigger additional vibration (if channel vibration is insufficient)
         vibrate(context)
     }
 
     /**
-     * Notification entfernen (nach "Erledigt" oder "Snooze")
+     * Dismisses the notification (after "All taken" or "Snooze").
      */
     fun dismissAlarmNotification(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java)
@@ -161,8 +161,8 @@ object AlarmNotificationManager {
     }
 
     /**
-     * Vibration auslösen
-     * Muster: 500ms an, 200ms aus, 500ms an, 200ms aus, 500ms an
+     * Triggers vibration.
+     * Pattern: 500ms on, 200ms off, 500ms on, 200ms off, 500ms on.
      */
     private fun vibrate(context: Context) {
         val pattern = longArrayOf(0, 500, 200, 500, 200, 500)

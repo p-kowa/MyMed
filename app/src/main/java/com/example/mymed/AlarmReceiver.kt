@@ -7,26 +7,26 @@ import android.os.Build
 import android.util.Log
 
 /**
- * AlarmReceiver - Empfängt zeitbasierte Alarme
+ * AlarmReceiver - receives time-based alarms.
  *
- * Wird aufgerufen von:
- * - AlarmScheduler (tägliche Erinnerungszeiten)
- * - SnoozeManager (Snooze-Alarm nach X Minuten)
+ * Called by:
+ * - AlarmScheduler (daily reminder times)
+ * - SnoozeManager (snooze alarm after X minutes)
  *
- * Zeigt jetzt eine "Wecker-artige" Notification statt die App direkt zu öffnen
+ * Shows an alarm-style notification instead of opening the app directly.
  */
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val isSnooze = intent.getBooleanExtra("is_snooze", false)
         val reminderId = intent.getIntExtra("reminder_id", -1)
-        Log.d("AlarmReceiver", if (isSnooze) "Snooze-Alarm" else "Regulärer Alarm (Reminder $reminderId)")
+        Log.d("AlarmReceiver", if (isSnooze) "Snooze alarm" else "Regular alarm (Reminder $reminderId)")
 
         if (!isSnooze) {
-            // Neuer regulärer Alarm → Snooze-Zähler für diese Session zurücksetzen
+            // New regular alarm -> reset snooze counter for this session
             SnoozeManager.onNewAlarmFired(context, reminderId)
 
-            // WICHTIG: Nächste Instanz dieses Alarms planen (da exakte Alarme
-            // sich nicht selbst wiederholen!)
+            // IMPORTANT: Schedule the next occurrence of this alarm,
+            // because exact alarms do not auto-repeat.
             val medicationId = intent.getIntExtra("medication_id", -1)
             val daysOfWeek = intent.getStringExtra("days_of_week") ?: "1,2,3,4,5,6,7"
             val hour = intent.getIntExtra("hour", -1)
@@ -36,7 +36,7 @@ class AlarmReceiver : BroadcastReceiver() {
             }
         }
 
-        // Service sicherstellen
+        // Ensure service is running
         val serviceIntent = Intent(context, MedicationReminderService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(serviceIntent)
@@ -44,10 +44,10 @@ class AlarmReceiver : BroadcastReceiver() {
             context.startService(serviceIntent)
         }
 
-        // Kontinuierlichen Alarm-Sound + Vibration starten
+        // Start continuous alarm sound + vibration
         AlarmSoundManager.start(context)
 
-        // Alarm-Notification anzeigen
+        // Show alarm notification
         AlarmNotificationManager.showAlarmNotification(
             context = context,
             snoozeMinutes = SnoozeManager.getSnoozeMinutes(context),

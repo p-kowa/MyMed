@@ -25,8 +25,8 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "mymed.db"
                 )
-                // Löscht die DB wenn sich das Schema ändert (gut für Entwicklung!)
-                // Vor Release: echte Migration schreiben
+                // Deletes DB when schema changes (useful during development)
+                // Before release: implement real migrations
                 .fallbackToDestructiveMigration(true)
                 .build().also { INSTANCE = it }
             }

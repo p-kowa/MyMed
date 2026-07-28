@@ -52,7 +52,7 @@ fun MedicationDetailScreen(
     var showReminderSheet by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    // ML Kit Scan States
+    // ML Kit scan states
     var scanPhotoUri by remember { mutableStateOf<Uri?>(null) }
     var scanResult by remember { mutableStateOf<ScanResult?>(null) }
     var isScanning by remember { mutableStateOf(false) }
@@ -71,7 +71,7 @@ fun MedicationDetailScreen(
         }
     }
 
-    // Kamera-Launcher: Foto aufnehmen → ML Kit verarbeiten
+    // Camera launcher: take photo -> process with ML Kit
     val takePicture = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
@@ -96,7 +96,7 @@ fun MedicationDetailScreen(
         }
     }
 
-    // Hilfsfunktion: Temp-Datei erstellen und Kamera starten
+    // Helper: create temp file and launch camera
     fun launchCamera() {
         val tmpFile = File(context.cacheDir, "scan_tmp_${System.currentTimeMillis()}.jpg")
         val uri = FileProvider.getUriForFile(
@@ -108,7 +108,7 @@ fun MedicationDetailScreen(
         takePicture.launch(uri)
     }
 
-    // Camera Permission Launcher
+    // Camera permission launcher
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -149,19 +149,19 @@ fun MedicationDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // --- ML Kit Scan Button ---
+            // --- ML Kit scan button ---
             OutlinedButton(
                 onClick = {
-                    // Erst Permission prüfen, dann Kamera starten
+                    // First check permission, then launch camera
                     when {
                         ContextCompat.checkSelfPermission(
                             context, Manifest.permission.CAMERA
                         ) == PackageManager.PERMISSION_GRANTED -> {
-                            // Permission bereits da → direkt starten
+                            // Permission already granted -> start immediately
                             launchCamera()
                         }
                         else -> {
-                            // Permission fehlt → Dialog anzeigen
+                            // Permission missing -> show system dialog
                             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                         }
                     }
@@ -180,7 +180,7 @@ fun MedicationDetailScreen(
                 }
             }
 
-            // Scan-Fehler anzeigen
+            // Show scan error
             if (scanError != null) {
                 Text(
                     text = scanError!!,
@@ -191,7 +191,7 @@ fun MedicationDetailScreen(
 
             HorizontalDivider()
 
-            // --- Formular-Felder ---
+            // --- Form fields ---
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
@@ -219,7 +219,7 @@ fun MedicationDetailScreen(
                 minLines = 3
             )
 
-            // Aktiv/Inaktiv Toggle
+            // Active/inactive toggle
             Card(modifier = Modifier.fillMaxWidth()) {
                 Row(
                     modifier = Modifier
@@ -239,7 +239,7 @@ fun MedicationDetailScreen(
                 }
             }
 
-            // Erinnerungen Button (nur Edit-Modus)
+            // Reminders button (edit mode only)
             if (isEditMode) {
                 OutlinedButton(
                     onClick = { showReminderSheet = true },
@@ -251,7 +251,7 @@ fun MedicationDetailScreen(
                 }
             }
 
-            // Speichern Button
+            // Save button
             Button(
                 onClick = {
                     if (name.isBlank()) return@Button
@@ -277,7 +277,7 @@ fun MedicationDetailScreen(
         }
     }
 
-    // Löschen Dialog
+    // Delete dialog
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
@@ -300,7 +300,7 @@ fun MedicationDetailScreen(
         )
     }
 
-    // Reminder Bottom Sheet
+    // Reminder bottom sheet
     if (showReminderSheet) {
         ReminderBottomSheet(
             medicationId = medicationId,
@@ -309,12 +309,12 @@ fun MedicationDetailScreen(
         )
     }
 
-    // ML Kit Review Dialog - erscheint nach erfolgreichem Scan
+    // ML Kit review dialog - appears after successful scan
     scanResult?.let { result ->
         ScanReviewDialog(
             scanResult = result,
             onConfirm = { confirmedName, confirmedDosage, confirmedNotes ->
-                // Felder mit erkanntem Text vorausfüllen (nur wenn nicht leer)
+                // Pre-fill fields with recognized text (only if non-empty)
                 if (confirmedName.isNotBlank()) name = confirmedName
                 if (confirmedDosage.isNotBlank()) dosage = confirmedDosage
                 if (confirmedNotes.isNotBlank()) notes = confirmedNotes
@@ -326,8 +326,8 @@ fun MedicationDetailScreen(
 }
 
 /**
- * Dialog: Zeigt erkannten Text zur Bestätigung/Korrektur
- * Alle Felder sind editierbar bevor übernommen wird
+ * Dialog: Shows recognized text for confirmation/correction.
+ * All fields are editable before applying.
  */
 @Composable
 fun ScanReviewDialog(
@@ -378,7 +378,7 @@ fun ScanReviewDialog(
                     minLines = 2
                 )
 
-                // Volltext ein-/ausklappen (zum Nachschauen)
+                // Expand/collapse full text for reference
                 TextButton(
                     onClick = { showRawText = !showRawText },
                     modifier = Modifier.fillMaxWidth()

@@ -12,10 +12,10 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED ||
             intent.action == "android.intent.action.QUICKBOOT_POWERON") {
-            Log.d("BootReceiver", "Gerät gestartet - lade Alarme aus DB")
+            Log.d("BootReceiver", "Device booted - loading alarms from DB")
             val serviceIntent = Intent(context, MedicationReminderService::class.java)
             context.startForegroundService(serviceIntent)
-            // Alarme aus DB laden (braucht Coroutine da DB-Zugriff)
+            // Load alarms from DB (uses coroutine for DB access)
             CoroutineScope(Dispatchers.IO).launch {
                 AlarmScheduler.rescheduleFromDb(context)
             }

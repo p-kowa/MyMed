@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
-// Hilfsfunktion: "1,2,3,4,5" → "Mo Di Mi Do Fr"
+// Helper: "1,2,3,4,5" -> "Mo Di Mi Do Fr"
 fun formatDaysOfWeek(daysOfWeek: String): String {
     val names = mapOf(1 to "Mo", 2 to "Di", 3 to "Mi", 4 to "Do", 5 to "Fr", 6 to "Sa", 7 to "So")
     if (daysOfWeek == "1,2,3,4,5,6,7") return "Täglich"
@@ -49,11 +49,11 @@ fun ReminderBottomSheet(
         )
     )
 
-    // Reminder-Liste für dieses Medikament als reaktiver Flow
+    // Reminder list for this medication as reactive Flow
     val reminders by viewModel.getRemindersForMedication(medicationId)
         .collectAsState(initial = emptyList())
 
-    // Zeigt den "Neue Erinnerung" Dialog
+    // Controls "new reminder" dialog visibility
     var showAddDialog by remember { mutableStateOf(false) }
 
     ModalBottomSheet(
@@ -66,7 +66,7 @@ fun ReminderBottomSheet(
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 32.dp)
         ) {
-            // Titel
+            // Title
             Text(
                 text = "⏰ Erinnerungen",
                 fontSize = 20.sp,
@@ -81,7 +81,7 @@ fun ReminderBottomSheet(
             Spacer(Modifier.height(16.dp))
 
             if (reminders.isEmpty()) {
-                // Leerer Zustand
+                // Empty state
                 Box(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
                     contentAlignment = Alignment.Center
@@ -93,7 +93,7 @@ fun ReminderBottomSheet(
                     )
                 }
             } else {
-                // Liste der bestehenden Erinnerungen
+                // Existing reminders list
                 LazyColumn(
                     modifier = Modifier.heightIn(max = 300.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -112,7 +112,7 @@ fun ReminderBottomSheet(
 
             Spacer(Modifier.height(16.dp))
 
-            // Button: Neue Erinnerung hinzufügen
+            // Button: add new reminder
             OutlinedButton(
                 onClick = { showAddDialog = true },
                 modifier = Modifier.fillMaxWidth()
@@ -124,7 +124,7 @@ fun ReminderBottomSheet(
         }
     }
 
-    // Dialog für neue Erinnerung
+    // Dialog for new reminder
     if (showAddDialog) {
         AddReminderDialog(
             onConfirm = { hour, minute, daysOfWeek ->
@@ -143,7 +143,7 @@ fun ReminderBottomSheet(
     }
 }
 
-// Eine einzelne Erinnerungs-Zeile
+// Single reminder row
 @Composable
 fun ReminderItem(
     reminder: Reminder,
@@ -163,7 +163,7 @@ fun ReminderItem(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Zeit groß anzeigen
+            // Show time prominently
             Text(
                 text = "%02d:%02d".format(reminder.hour, reminder.minute),
                 fontSize = 24.sp,
@@ -171,7 +171,7 @@ fun ReminderItem(
                 modifier = Modifier.width(80.dp)
             )
 
-            // Wochentage
+            // Weekdays
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = formatDaysOfWeek(reminder.daysOfWeek),
@@ -180,7 +180,7 @@ fun ReminderItem(
                 )
             }
 
-            // Aktiv/Inaktiv Toggle
+            // Active/inactive toggle
             Switch(
                 checked = reminder.enabled,
                 onCheckedChange = { onToggleEnabled() }
@@ -188,7 +188,7 @@ fun ReminderItem(
 
             Spacer(Modifier.width(4.dp))
 
-            // Löschen
+            // Delete
             IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Delete, "Löschen", tint = Color.Red.copy(alpha = 0.7f))
             }
@@ -196,21 +196,21 @@ fun ReminderItem(
     }
 }
 
-// Dialog: Neue Erinnerung konfigurieren
+// Dialog: configure a new reminder
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddReminderDialog(
     onConfirm: (hour: Int, minute: Int, daysOfWeek: String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    // TimePicker State (24h Format)
+    // TimePicker state (24-hour format)
     val timePickerState = rememberTimePickerState(
         initialHour = 7,
         initialMinute = 0,
         is24Hour = true
     )
 
-    // Wochentage State: welche Tage sind ausgewählt?
+    // Weekday state: which days are selected?
     val dayLabels = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
     var selectedDays by remember { mutableStateOf(setOf(1, 2, 3, 4, 5, 6, 7)) }
 
@@ -223,7 +223,7 @@ fun AddReminderDialog(
                 // TimePicker (Material3)
                 TimePicker(state = timePickerState)
 
-                // Wochentage auswählen
+                // Select weekdays
                 Text("Wochentage:", fontWeight = FontWeight.Medium)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -263,7 +263,7 @@ fun AddReminderDialog(
     )
 }
 
-// Kompakter runder Tages-Button (passt alle 7 Tage in eine Zeile)
+// Compact round day toggle button (fits all 7 days in one row)
 @Composable
 fun DayToggleButton(
     label: String,

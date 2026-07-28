@@ -48,14 +48,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Permission anfragen + Service starten (Service plant die Alarme!)
+        // Request permission + start service (service schedules alarms)
         requestNotificationPermission()
 
         enableEdgeToEdge()
         setContent {
             MyMedTheme {
                 val navController = rememberNavController()
-                // isAlarmActive: true wenn App vom Alarm geöffnet wurde
+                // isAlarmActive: true when app is opened from an alarm
                 var isAlarmActive by remember {
                     mutableStateOf(AlarmSoundManager.isAlarmPlaying())
                 }
@@ -74,8 +74,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Beim Zurückkehren zur App prüfen ob Alarm noch aktiv
-        // (wird durch Recomposition aktualisiert wenn isAlarmActive state aktualisiert wird)
+        // When returning to app, alarm state is reflected by recomposition
     }
 
     private fun requestNotificationPermission() {
@@ -97,7 +96,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// --- Navigation Setup ---
+// --- Navigation setup ---
 @Composable
 fun AppNavigation(
     navController: NavHostController,
@@ -142,7 +141,7 @@ fun MedicationReminderScreen(
     isAlarmActive: Boolean = false,
     onStopAlarm: () -> Unit = {}
 ) {
-    // ViewModel mit DB-Factory erstellen
+    // Create ViewModel with DB factory
     val context = LocalContext.current
     val db = remember { AppDatabase.getInstance(context) }
     val viewModel: MedicationViewModel = viewModel(
@@ -152,7 +151,7 @@ fun MedicationReminderScreen(
         )
     )
 
-    // StateFlow → State (Compose reagiert automatisch auf Änderungen)
+    // StateFlow -> State (Compose reacts automatically to updates)
     val medications by viewModel.medications.collectAsState()
     val snoozeCountToday by viewModel.snoozeCountToday.collectAsState()
 
@@ -178,8 +177,8 @@ fun MedicationReminderScreen(
         },
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
-        // Liste wird IMMER angezeigt (kein "Erledigt"-Screen mehr)
-        // Genommene Medikamente zeigen durchgestrichene Zeiten
+        // List is always shown (no separate "done" screen)
+        // Taken medications display strikethrough times
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -188,7 +187,7 @@ fun MedicationReminderScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-                // 🔴 STOP-Button: nur sichtbar wenn Alarm aktiv (Ton läuft)
+                // 🔴 STOP button: visible only while alarm is active (sound playing)
                 if (isAlarmActive) {
                     Button(
                         onClick = onStopAlarm,
@@ -230,7 +229,7 @@ fun MedicationReminderScreen(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 if (medications.isEmpty()) {
-                    // Keine Medikamente in DB → Hinweis anzeigen
+                    // No medications in DB -> show hint
                     Box(
                         modifier = Modifier.weight(1f),
                         contentAlignment = Alignment.Center
@@ -264,9 +263,9 @@ fun MedicationReminderScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Snooze Button - zeigt aktuelle Zeit + Zähler
+                // Snooze button - shows current duration + counter
                 val snoozesLeft = viewModel.maxSnoozeCount - snoozeCountToday
-                // Alle Medikamente heute schon genommen? Dann nichts zu snoozen.
+                // All medications already taken today? Then nothing to snooze.
                 val allTaken = medications.isNotEmpty() && medications.all { it.isChecked }
                 val snoozeButtonEnabled = medications.isNotEmpty() && !allTaken
                 val snoozeActive = snoozeButtonEnabled && viewModel.canSnooze
@@ -297,7 +296,7 @@ fun MedicationReminderScreen(
                     }
                 }
 
-                // Einstellungs-Link für Snooze
+                // Settings link for Snooze
                 TextButton(onClick = { showSnoozeDialog = true }) {
                     Text(
                         "Snooze-Einstellungen",
@@ -310,7 +309,7 @@ fun MedicationReminderScreen(
         }
     }
 
-    // Snooze-Einstellungs-Dialog
+    // Snooze settings dialog
     if (showSnoozeDialog) {
         SnoozeSettingsDialog(
             currentMinutes = viewModel.snoozeMinutes,
@@ -319,7 +318,7 @@ fun MedicationReminderScreen(
             context = LocalContext.current,
             onReset = { viewModel.resetSnoozeCountToday() },
             onDismiss = {
-                viewModel.refreshSnoozeCount()  // Zähler neu lesen nach Dialog
+                viewModel.refreshSnoozeCount()  // Refresh counter after dialog
                 showSnoozeDialog = false
             }
         )
@@ -370,7 +369,7 @@ fun SnoozeSettingsDialog(
                     }
                 }
 
-                // Zähler heute + Reset-Button
+                // Today's counter + reset button
                 HorizontalDivider()
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -411,7 +410,7 @@ fun MedicationItem(
     item: MedicationCheckItem,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    // Genommene Medikamente werden abgeschwächt dargestellt
+    // Taken medications are displayed with reduced emphasis
     val contentAlpha = if (item.isChecked) 0.5f else 1f
 
     Card(
@@ -434,14 +433,14 @@ fun MedicationItem(
             )
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Name + Dosis (links, nimmt verfügbaren Platz)
+            // Name + dosage (left, takes remaining space)
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = item.name,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha),
-                    // Name durchstreichen wenn genommen
+                    // Strike through name when taken
                     textDecoration = if (item.isChecked)
                         androidx.compose.ui.text.style.TextDecoration.LineThrough
                     else null
@@ -455,7 +454,7 @@ fun MedicationItem(
                 }
             }
 
-            // Alarm-Zeiten (rechts) - durchgestrichen wenn genommen
+            // Alarm times (right) - strikethrough when taken
             if (item.reminderTimes.isNotEmpty()) {
                 Column(horizontalAlignment = Alignment.End) {
                     item.reminderTimes.forEach { time ->

@@ -11,7 +11,7 @@ data class MyMedication(
     val dosage: String? = null,
     val notes: String? = null,
     val active: Boolean = true
-    // imagePath entfernt - ML Kit scannt Text direkt von Packung
+    // imagePath removed - ML Kit scans text directly from package
 )
 
 @Entity(tableName = "reminders")
@@ -22,8 +22,8 @@ data class Reminder(
     val hour: Int,
     val minute: Int,
     val enabled: Boolean = true,
-    // Wochentage als komma-getrennte Liste: "1,2,3,4,5,6,7" = jeden Tag
-    // "1,3,5" = Montag, Mittwoch, Freitag
+    // Weekdays as comma-separated list: "1,2,3,4,5,6,7" = every day
+    // "1,3,5" = Monday, Wednesday, Friday
     val daysOfWeek: String = "1,2,3,4,5,6,7"
 )
 
@@ -32,9 +32,9 @@ data class MedicationHistory(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val medicationId: Int,
-    val reminderId: Int? = null,     // Welcher Alarm hat ausgelöst?
-    val takenAt: Long,               // Zeitstempel in Millisekunden
-    val skipped: Boolean = false,    // true = bewusst übersprungen
-    val note: String? = null         // z.B. "halbe Dosis genommen"
+    val reminderId: Int? = null,     // Which alarm triggered this entry?
+    val takenAt: Long,               // Timestamp in milliseconds
+    val skipped: Boolean = false,    // true = intentionally skipped
+    val note: String? = null         // e.g. "half dose taken"
 )
 

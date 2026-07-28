@@ -14,17 +14,17 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
-// Wrapper: Medikament aus DB + ob es HEUTE bereits genommen wurde + seine Erinnerungszeiten
+// Wrapper: medication from DB + whether it was taken TODAY + its reminder times
 data class MedicationCheckItem(
     val medication: MyMedication,
     val isChecked: Boolean = false,
-    val reminders: List<Reminder> = emptyList()  // ← NEU: Alarm-Zeiten dieses Medikaments
+    val reminders: List<Reminder> = emptyList()  // New: reminder times for this medication
 ) {
     val id: Int get() = medication.id
     val name: String get() = medication.name
     val dosage: String? get() = medication.dosage
 
-    // Formatierte Zeitliste für die UI: ["07:00", "19:00"]
+    // Formatted time list for the UI: ["07:00", "19:00"]
     val reminderTimes: List<String> get() = reminders
         .filter { it.enabled }
         .sortedWith(compareBy({ it.hour }, { it.minute }))
@@ -36,7 +36,7 @@ class MedicationViewModel(
     private val app: Application
 ) : AndroidViewModel(app) {
 
-    // Berechnet Mitternacht heute (Beginn des Tages)
+    // Calculates midnight for today (start of day)
     private fun startOfToday(): Long {
         return Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0)
@@ -46,11 +46,11 @@ class MedicationViewModel(
         }.timeInMillis
     }
 
-    // Kombiniert: aktive Medis + ob heute genommen + Erinnerungszeiten
+    // Combines: active meds + taken-today state + reminder times
     val medications: StateFlow<List<MedicationCheckItem>> = combine(
         dao.getAllMedications().map { list -> list.filter { it.active } },
         dao.getTakenTodayIds(startOfToday()),
-        dao.getAllReminders()          // ← alle Reminders aus DB
+        dao.getAllReminders()          // all reminders from DB
     ) { activeMeds, takenTodayIds, allReminders ->
         activeMeds.map { med ->
             MedicationCheckItem(
@@ -65,11 +65,11 @@ class MedicationViewModel(
         initialValue = emptyList()
     )
 
-    // Ob der Reminder-Screen sichtbar ist
-    // true solange noch nicht alle genommen wurden
+    // Whether the reminder screen should be visible
+    // true as long as not all medications are taken
     val isReminderVisible: StateFlow<Boolean> = medications
         .map { list ->
-            // Sichtbar wenn: Liste leer ODER noch nicht alle gecheckt
+            // Visible if list is empty OR not all are checked
             list.isEmpty() || !list.all { it.isChecked }
         }
         .stateIn(
@@ -82,18 +82,18 @@ class MedicationViewModel(
         viewModelScope.launch {
             val alreadyTaken = medications.value.find { it.id == id }?.isChecked ?: false
             if (alreadyTaken) {
-                // Heutigen Eintrag aus History löschen (uncheckzen)
+                // Delete today's history entry (uncheck)
                 dao.deleteTodayEntry(id, startOfToday())
             } else {
-                // Neuen History-Eintrag schreiben (checkzen)
+                // Insert new history entry (check)
                 dao.insertHistory(
                     MedicationHistory(
                         medicationId = id,
                         takenAt = System.currentTimeMillis()
                     )
                 )
-                // Wenn dadurch ALLE Medikamente genommen wurden:
-                // pendenten Snooze-Alarm abbrechen (nichts mehr zu erinnern)
+                // If this makes ALL medications taken:
+                // cancel pending snooze alarm (nothing left to remind)
                 val nowAllTaken = medications.value.all {
                     it.id == id || it.isChecked
                 }
@@ -104,7 +104,7 @@ class MedicationViewModel(
         }
     }
 
-    // Snooze-Status
+    // Snooze status
     private val _snoozeCountToday = kotlinx.coroutines.flow.MutableStateFlow(
         SnoozeManager.getSnoozeCountToday(app)
     )
@@ -113,34 +113,34 @@ class MedicationViewModel(
     val snoozeMinutes: Int get() = SnoozeManager.getSnoozeMinutes(app)
     val canSnooze: Boolean get() = SnoozeManager.canSnoozeToday(app)
 
-    // Zähler aus SharedPreferences neu lesen (z.B. nach Mitternacht oder nach Settings-Dialog)
+    // Refresh counter from SharedPreferences (e.g., after midnight or settings dialog)
     fun refreshSnoozeCount() {
         _snoozeCountToday.value = SnoozeManager.getSnoozeCountToday(app)
     }
 
-    // Snooze-Zähler für heute zurücksetzen (z.B. im Settings-Dialog)
+    // Reset snooze counter for today (e.g., from settings dialog)
     fun resetSnoozeCountToday() {
         SnoozeManager.resetTodayCount(app)
         _snoozeCountToday.value = 0
     }
 
     fun snooze() {
-        // 1. Alarm planen (SnoozeManager übernimmt das)
+        // 1. Schedule alarm (handled by SnoozeManager)
         val success = SnoozeManager.snooze(app)
-        if (!success) return  // Max-Anzahl erreicht
+        if (!success) return  // Max count reached
 
-        // 2. Checkboxen zurücksetzen (History löschen)
+        // 2. Reset checkboxes (delete today's history)
         viewModelScope.launch {
             medications.value.forEach { item ->
                 dao.deleteTodayEntry(item.id, startOfToday())
             }
-            // 3. Zähler aktualisieren damit UI sofort reagiert
+            // 3. Update counter so UI reacts immediately
             _snoozeCountToday.value = SnoozeManager.getSnoozeCountToday(app)
         }
     }
 
     fun resetReminder() {
-        // Zurücksetzen: alle heutigen Einträge löschen
+        // Reset: delete all today's entries
         viewModelScope.launch {
             medications.value.forEach { item ->
                 dao.deleteTodayEntry(item.id, startOfToday())

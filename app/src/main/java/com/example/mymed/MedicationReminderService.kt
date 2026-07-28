@@ -15,8 +15,8 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 
 /**
- * MedicationReminderService - Foreground Service der dauerhaft läuft
- * Zeigt eine dauerhafte Notification und stellt sicher, dass die App aktiv bleibt
+ * MedicationReminderService - long-running foreground service.
+ * Shows a persistent notification and keeps reminder infrastructure active.
  */
 class MedicationReminderService : Service() {
 
@@ -28,23 +28,23 @@ class MedicationReminderService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        Log.d("MedicationService", "Service erstellt")
+        Log.d("MedicationService", "Service created")
         createNotificationChannel()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d("MedicationService", "Service gestartet")
+        Log.d("MedicationService", "Service started")
 
-        // Starte als Foreground Service mit Notification
+        // Start as foreground service with notification
         val notification = createNotification()
         startForeground(NOTIFICATION_ID, notification)
 
-        // Alarme aus DB laden und planen
+        // Load and schedule alarms from DB
         CoroutineScope(Dispatchers.IO).launch {
             AlarmScheduler.rescheduleFromDb(this@MedicationReminderService)
         }
 
-        // START_STICKY = Service wird neu gestartet wenn beendet
+        // START_STICKY = service is restarted after process death
         return START_STICKY
     }
 
@@ -52,9 +52,9 @@ class MedicationReminderService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d("MedicationService", "Service wird beendet - starte neu...")
+        Log.d("MedicationService", "Service destroyed - restarting...")
 
-        // Automatischer Neustart
+        // Automatic restart
         val restartIntent = Intent(applicationContext, MedicationReminderService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             applicationContext.startForegroundService(restartIntent)
@@ -68,7 +68,7 @@ class MedicationReminderService : Service() {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_LOW // LOW = keine Sounds/Vibration
+                NotificationManager.IMPORTANCE_LOW // LOW = no sound/vibration
             ).apply {
                 description = "Zeigt an, dass die Medikamenten-Erinnerung aktiv ist"
                 setShowBadge(false)
@@ -80,7 +80,7 @@ class MedicationReminderService : Service() {
     }
 
     private fun createNotification(): Notification {
-        // Intent zum Öffnen der App wenn auf Notification geklickt wird
+        // Intent to open app when notification is tapped
         val notificationIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
             this,

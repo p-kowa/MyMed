@@ -11,25 +11,25 @@ import kotlinx.coroutines.launch
 /**
  * NotificationActionReceiver
  *
- * Verarbeitet Klicks auf die Notification-Buttons:
- * - "✅ Alle genommen" → alle Medikamente als genommen markieren
- * - "⏰ Snooze"        → Snooze-Alarm planen, Notification schließen
+ * Handles taps on notification action buttons:
+ * - "✅ All taken" -> mark all medications as taken
+ * - "⏰ Snooze"        -> schedule snooze alarm, close notification
  *
- * Hinweis: BroadcastReceiver hat sehr kurze Lebenszeit.
- * Für DB-Operationen (suspend functions) brauchen wir goAsync() + CoroutineScope.
+ * Note: BroadcastReceiver has a very short lifetime.
+ * DB operations (suspend functions) use goAsync() + CoroutineScope.
  */
 class NotificationActionReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
 
-            // ✅ "Alle genommen" Button gedrückt
+            // ✅ "All taken" button tapped
             AlarmNotificationManager.ACTION_ALL_TAKEN -> {
-                Log.d("NotificationAction", "Alle Medikamente genommen")
+                Log.d("NotificationAction", "All medications marked as taken")
 
-                // Alarm-Sound + Vibration SOFORT stoppen
+                // Stop alarm sound + vibration immediately
                 AlarmSoundManager.stop(context)
-                // Alle genommen → kein Snooze mehr nötig
+                // All taken -> no snooze needed anymore
                 SnoozeManager.cancelSnooze(context)
 
                 val pendingResult = goAsync()
@@ -41,9 +41,9 @@ class NotificationActionReceiver : BroadcastReceiver() {
                         activeMeds.forEach { med ->
                             dao.insertHistory(MedicationHistory(medicationId = med.id, takenAt = now))
                         }
-                        Log.d("NotificationAction", "${activeMeds.size} Medikamente als genommen markiert")
+                        Log.d("NotificationAction", "${activeMeds.size} medication(s) marked as taken")
                     } catch (e: Exception) {
-                        Log.e("NotificationAction", "Fehler: ${e.message}")
+                        Log.e("NotificationAction", "Error: ${e.message}")
                     } finally {
                         AlarmNotificationManager.dismissAlarmNotification(context)
                         pendingResult.finish()
@@ -51,11 +51,11 @@ class NotificationActionReceiver : BroadcastReceiver() {
                 }
             }
 
-            // ⏰ "Snooze" Button gedrückt
+            // ⏰ "Snooze" button tapped
             AlarmNotificationManager.ACTION_SNOOZE -> {
-                Log.d("NotificationAction", "Snooze gedrückt")
+                Log.d("NotificationAction", "Snooze tapped")
 
-                // Alarm-Sound + Vibration SOFORT stoppen
+                // Stop alarm sound + vibration immediately
                 AlarmSoundManager.stop(context)
 
                 SnoozeManager.snooze(context)

@@ -17,12 +17,12 @@ class MedicationManagementViewModel(
     val medications: StateFlow<List<MyMedication>> = dao.getAllMedications()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // --- Medikament CRUD ---
+    // --- Medication CRUD ---
     fun insert(medication: MyMedication) { viewModelScope.launch { dao.insert(medication) } }
     fun update(medication: MyMedication) { viewModelScope.launch { dao.update(medication) } }
     fun delete(medication: MyMedication) {
         viewModelScope.launch {
-            // Erst die Reminder des Medikaments löschen (sonst Waisen!)
+            // Delete this medication's reminders first (avoid orphans)
             dao.deleteRemindersForMedication(medication.id)
             dao.delete(medication)
             rescheduleAlarms()

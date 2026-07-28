@@ -28,9 +28,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MedicationListScreen(
-    onNavigateToDetail: (Int) -> Unit,   // ID des Medikaments
-    onNavigateToAdd: () -> Unit,          // Neues Medikament
-    onNavigateBack: () -> Unit            // Zurück zur Hauptseite
+    onNavigateToDetail: (Int) -> Unit,   // Medication ID
+    onNavigateToAdd: () -> Unit,          // New medication
+    onNavigateBack: () -> Unit            // Back to main screen
 ) {
     val context = LocalContext.current
     val db = remember { AppDatabase.getInstance(context) }
@@ -41,7 +41,7 @@ fun MedicationListScreen(
         )
     )
 
-    // Holt die Medikamenten-Liste aus der DB (Flow → State)
+    // Loads medication list from DB (Flow -> State)
     val medications by viewModel.medications.collectAsState()
 
     Scaffold(
@@ -55,7 +55,7 @@ fun MedicationListScreen(
                 }
             )
         },
-        // FAB = Floating Action Button (der runde + Button unten rechts)
+        // FAB = Floating Action Button (round + button bottom-right)
         floatingActionButton = {
             FloatingActionButton(onClick = onNavigateToAdd) {
                 Icon(Icons.Default.Add, contentDescription = "Hinzufügen")
@@ -64,7 +64,7 @@ fun MedicationListScreen(
     ) { innerPadding ->
 
         if (medications.isEmpty()) {
-            // Leere Liste - Hinweis anzeigen
+            // Empty list - show hint
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -119,14 +119,14 @@ fun MedicationListItem(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Grüner/Grauer Kreis = aktiv/inaktiv
+            // Green/gray dot = active/inactive
             Box(
                 modifier = Modifier
                     .size(14.dp)
                     .clip(CircleShape)
                     .background(
-                        if (medication.active) Color(0xFF4CAF50) // Grün
-                        else Color(0xFF9E9E9E)                   // Grau
+                        if (medication.active) Color(0xFF4CAF50) // Green
+                        else Color(0xFF9E9E9E)                   // Gray
                     )
             )
 

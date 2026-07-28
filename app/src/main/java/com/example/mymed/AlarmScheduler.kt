@@ -9,14 +9,14 @@ import android.util.Log
 import java.util.Calendar
 
 /**
- * AlarmScheduler - Plant exakte, tägliche Medikamenten-Alarme
+ * AlarmScheduler - Schedules exact daily medication alarms.
  *
- * WICHTIG: Verwendet setExactAndAllowWhileIdle (nicht setRepeating!)
- * → Grund: setRepeating ist seit Android 4.4 INEXAKT und wird im
- *   Doze-Modus (Handy im Standby) verschoben oder gar nicht ausgelöst.
+ * IMPORTANT: Uses setExactAndAllowWhileIdle (not setRepeating!).
+ * Reason: setRepeating has been inexact since Android 4.4 and can be
+ * delayed or skipped in Doze mode (device standby).
  *
- * Da exakte Alarme sich NICHT wiederholen, plant der AlarmReceiver
- * nach jedem Auslösen die nächste Instanz neu (siehe scheduleNext()).
+ * Since exact alarms do not repeat automatically, AlarmReceiver
+ * schedules the next occurrence after each trigger (see scheduleNext()).
  */
 object AlarmScheduler {
 
@@ -25,7 +25,7 @@ object AlarmScheduler {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (!alarmManager.canScheduleExactAlarms()) {
-                Log.w("AlarmScheduler", "Keine Exact-Alarm-Permission! Fallback auf ungenaue Alarme.")
+                Log.w("AlarmScheduler", "No exact-alarm permission. Falling back to inexact alarms.")
             }
         }
 
@@ -33,12 +33,12 @@ object AlarmScheduler {
 
         val enabled = reminders.filter { it.enabled }
         enabled.forEach { scheduleReminder(context, alarmManager, it) }
-        Log.d("AlarmScheduler", "${enabled.size} Reminder geplant")
+        Log.d("AlarmScheduler", "${enabled.size} reminder(s) scheduled")
     }
 
     fun scheduleReminder(context: Context, alarmManager: AlarmManager, reminder: Reminder) {
         val triggerTime = nextTriggerTime(reminder) ?: run {
-            Log.w("AlarmScheduler", "Reminder ${reminder.id}: keine gültigen Wochentage")
+            Log.w("AlarmScheduler", "Reminder ${reminder.id}: no valid weekdays")
             return
         }
 
@@ -55,26 +55,26 @@ object AlarmScheduler {
         )
 
         try {
-            // Exakter Alarm der auch im Doze-Modus (Standby) feuert
+            // Exact alarm that also fires in Doze mode (standby)
             alarmManager.setExactAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
                 triggerTime,
                 pendingIntent
             )
             val cal = Calendar.getInstance().apply { timeInMillis = triggerTime }
-            Log.d("AlarmScheduler", "Alarm ${reminder.id}: %02d:%02d (in %d Min)".format(
+            Log.d("AlarmScheduler", "Alarm ${reminder.id}: %02d:%02d (in %d min)".format(
                 reminder.hour, reminder.minute,
                 (triggerTime - System.currentTimeMillis()) / 60000
             ))
         } catch (e: SecurityException) {
             alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-            Log.w("AlarmScheduler", "Ungenauer Alarm (keine Permission): ${e.message}")
+            Log.w("AlarmScheduler", "Inexact alarm (no permission): ${e.message}")
         }
     }
 
     /**
-     * Berechnet den nächsten Zeitpunkt an dem dieser Reminder feuern soll
-     * - unter Berücksichtigung der Wochentage (1=Mo ... 7=So).
+     * Calculates the next trigger timestamp for this reminder,
+     * taking weekdays into account (1=Mon ... 7=Sun).
      */
     private fun nextTriggerTime(reminder: Reminder): Long? {
         val days = reminder.daysOfWeek.split(",")
@@ -84,7 +84,7 @@ object AlarmScheduler {
 
         val now = Calendar.getInstance()
 
-        // Heute + nächste 7 Tage prüfen
+        // Check today plus the next 7 days
         for (offset in 0..7) {
             val candidate = Calendar.getInstance().apply {
                 add(Calendar.DAY_OF_YEAR, offset)
@@ -94,7 +94,7 @@ object AlarmScheduler {
                 set(Calendar.MILLISECOND, 0)
             }
 
-            // Calendar: Sonntag=1..Samstag=7 → unser Format: Montag=1..Sonntag=7
+            // Calendar: Sunday=1..Saturday=7 -> our format: Monday=1..Sunday=7
             val ourDayOfWeek = when (candidate.get(Calendar.DAY_OF_WEEK)) {
                 Calendar.MONDAY -> 1
                 Calendar.TUESDAY -> 2
@@ -114,8 +114,8 @@ object AlarmScheduler {
     }
 
     /**
-     * Nach dem Auslösen: nächste Instanz dieses Reminders planen.
-     * Wird vom AlarmReceiver aufgerufen.
+     * After firing, schedule the next occurrence of this reminder.
+     * Called from AlarmReceiver.
      */
     fun scheduleNext(context: Context, reminderId: Int, medicationId: Int,
                      daysOfWeek: String, hour: Int, minute: Int) {
@@ -139,15 +139,15 @@ object AlarmScheduler {
             )
             pi?.let { alarmManager.cancel(it) }
         }
-        // Sicherheitsnetz: Snooze-Alarm hat eine eigene ID (9999) außerhalb
-        // des obigen Bereichs - explizit mit abbrechen, damit keine
-        // "Geister-Alarme" von früheren Snooze-Tests übrig bleiben.
+        // Safety net: Snooze alarm uses a dedicated ID (9999) outside
+        // the range above, so cancel it explicitly to avoid
+        // stale "ghost alarms" from earlier snooze tests.
         SnoozeManager.cancelSnooze(context)
     }
 
     suspend fun rescheduleFromDb(context: Context) {
         val dao = AppDatabase.getInstance(context).medicationDao()
-        // Verwaiste Reminder aufräumen (deren Medikament gelöscht wurde)
+        // Clean up orphan reminders (their medication was deleted)
         dao.deleteOrphanReminders()
         val reminders = dao.getAllEnabledReminders()
         scheduleAlarms(context, reminders)

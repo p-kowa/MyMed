@@ -6,35 +6,35 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface MedicationDao {
 
-    // --- Medikamente ---
+    // --- Medications ---
 
-    // Alle Medikamente als Flow (aktualisiert sich automatisch bei DB-Änderungen)
+    // All medications as Flow (updates automatically on DB changes)
     @Query("SELECT * FROM medications ORDER BY name")
     fun getAllMedications(): Flow<List<MyMedication>>
 
-    // Alle aktiven Medikamente als einfache Liste (für Notification-Action)
+    // All active medications as a plain list (for notification action)
     @Query("SELECT * FROM medications WHERE active = 1")
     suspend fun getAllActiveMedications(): List<MyMedication>
 
-    // Ein einzelnes Medikament per ID laden
+    // Load a single medication by ID
     @Query("SELECT * FROM medications WHERE id = :id")
     suspend fun getById(id: Int): MyMedication?
 
-    // Neues Medikament einfügen, gibt neue ID zurück
+    // Insert new medication, returns generated ID
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(medication: MyMedication): Long
 
-    // Bestehendes Medikament aktualisieren
+    // Update existing medication
     @Update
     suspend fun update(medication: MyMedication)
 
-    // Medikament löschen
+    // Delete medication
     @Delete
     suspend fun delete(medication: MyMedication)
 
-    // --- Erinnerungen ---
+    // --- Reminders ---
 
-    // ALLE Reminders als Flow (für Haupt-Screen - Zeiten neben Medikamenten)
+    // ALL reminders as Flow (for main screen - times next to medications)
     @Query("SELECT * FROM reminders ORDER BY hour, minute")
     fun getAllReminders(): Flow<List<Reminder>>
 
@@ -53,11 +53,11 @@ interface MedicationDao {
     @Delete
     suspend fun deleteReminder(reminder: Reminder)
 
-    // Alle Reminder eines Medikaments löschen (beim Löschen des Medikaments)
+    // Delete all reminders of a medication (when deleting the medication)
     @Query("DELETE FROM reminders WHERE medicationId = :medicationId")
     suspend fun deleteRemindersForMedication(medicationId: Int)
 
-    // Verwaiste Reminder löschen (deren Medikament nicht mehr existiert)
+    // Delete orphan reminders (their medication no longer exists)
     @Query("DELETE FROM reminders WHERE medicationId NOT IN (SELECT id FROM medications)")
     suspend fun deleteOrphanReminders()
 
@@ -66,11 +66,11 @@ interface MedicationDao {
     @Insert
     suspend fun insertHistory(history: MedicationHistory)
 
-    // Alle medicationIds die HEUTE bereits genommen wurden (seit Mitternacht)
+    // All medication IDs already taken TODAY (since midnight)
     @Query("SELECT medicationId FROM medication_history WHERE takenAt >= :startOfDay AND skipped = 0")
     fun getTakenTodayIds(startOfDay: Long): Flow<List<Int>>
 
-    // Heutigen Eintrag löschen (wenn Checkbox wieder abgehakt wird)
+    // Delete today's entry (when checkbox is unchecked)
     @Query("DELETE FROM medication_history WHERE medicationId = :medicationId AND takenAt >= :startOfDay")
     suspend fun deleteTodayEntry(medicationId: Int, startOfDay: Long)
 

@@ -12,15 +12,15 @@ import android.os.VibratorManager
 import android.util.Log
 
 /**
- * AlarmSoundManager - Singleton der den Alarm-Sound + Vibration verwaltet
+ * AlarmSoundManager - Singleton that controls alarm sound and vibration.
  *
- * Wie ein Wecker:
- * - Startet kontinuierlichen Ton (läuft bis stop() aufgerufen wird)
- * - Startet wiederholende Vibration
- * - Stoppt beides auf Befehl
+ * Alarm-clock behavior:
+ * - Starts continuous sound (runs until stop() is called)
+ * - Starts repeating vibration
+ * - Stops both on command
  *
- * Singleton (object) = Es gibt genau eine Instanz im gesamten App-Leben
- * → So kann jeder im Code stoppen, egal von wo
+ * Singleton (object) = exactly one instance during app lifetime,
+ * so any caller can stop the alarm from anywhere.
  */
 object AlarmSoundManager {
 
@@ -29,13 +29,13 @@ object AlarmSoundManager {
     private var isPlaying = false
 
     /**
-     * Alarm starten (Sound + Vibration)
-     * Läuft kontinuierlich bis stop() aufgerufen wird
+     * Starts the alarm (sound + vibration).
+     * Runs continuously until stop() is called.
      */
     fun start(context: Context) {
-        if (isPlaying) return  // Nicht doppelt starten
+        if (isPlaying) return  // Do not start twice
         isPlaying = true
-        Log.d("AlarmSoundManager", "Alarm startet")
+        Log.d("AlarmSoundManager", "Alarm starting")
 
         // --- Sound ---
         try {
@@ -44,9 +44,9 @@ object AlarmSoundManager {
 
             ringtone = RingtoneManager.getRingtone(context.applicationContext, alarmUri)?.apply {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    isLooping = true  // Wiederholt automatisch!
+                    isLooping = true  // Auto-repeat
                 }
-                // Alarm-Audio-Stream (laut, ignoriert Stumm-Modus)
+                // Alarm audio stream (loud, ignores silent mode)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     audioAttributes = AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_ALARM)
@@ -57,38 +57,38 @@ object AlarmSoundManager {
                 play()
             }
         } catch (e: Exception) {
-            Log.e("AlarmSoundManager", "Sound-Fehler: ${e.message}")
+            Log.e("AlarmSoundManager", "Sound error: ${e.message}")
         }
 
-        // --- Vibration (wiederholt) ---
+        // --- Repeating vibration ---
         startVibration(context)
     }
 
     /**
-     * Alarm stoppen (Sound + Vibration)
+     * Stops the alarm (sound + vibration).
      */
     fun stop(context: Context) {
         if (!isPlaying) return
         isPlaying = false
-        Log.d("AlarmSoundManager", "Alarm gestoppt")
+        Log.d("AlarmSoundManager", "Alarm stopped")
 
-        // Sound stoppen
+        // Stop sound
         try {
             ringtone?.stop()
             ringtone = null
         } catch (e: Exception) {
-            Log.e("AlarmSoundManager", "Stop-Fehler: ${e.message}")
+            Log.e("AlarmSoundManager", "Stop error: ${e.message}")
         }
 
-        // Vibration stoppen
+        // Stop vibration
         stopVibration(context)
     }
 
     fun isAlarmPlaying(): Boolean = isPlaying
 
     private fun startVibration(context: Context) {
-        // Muster: warte 0ms, vibriere 800ms, pause 400ms, vibriere 800ms, pause 400ms...
-        // repeat = 0 → wiederholt ab Index 0 endlos
+        // Pattern: wait 0ms, vibrate 800ms, pause 400ms, ...
+        // repeat = 0 -> repeats from index 0 forever
         val pattern = longArrayOf(0, 800, 400, 800, 400)
 
         try {
@@ -107,7 +107,7 @@ object AlarmSoundManager {
                 vibrator?.vibrate(pattern, 0) // 0 = repeat
             }
         } catch (e: Exception) {
-            Log.e("AlarmSoundManager", "Vibrations-Fehler: ${e.message}")
+            Log.e("AlarmSoundManager", "Vibration error: ${e.message}")
         }
     }
 
@@ -116,7 +116,7 @@ object AlarmSoundManager {
             vibrator?.cancel()
             vibrator = null
         } catch (e: Exception) {
-            Log.e("AlarmSoundManager", "Vibrations-Stop-Fehler: ${e.message}")
+            Log.e("AlarmSoundManager", "Vibration stop error: ${e.message}")
         }
     }
 }
