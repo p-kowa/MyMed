@@ -51,15 +51,17 @@ class MedicationReminderService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d("MedicationService", "Service destroyed - restarting...")
-
-        // Automatic restart
-        val restartIntent = Intent(applicationContext, MedicationReminderService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            applicationContext.startForegroundService(restartIntent)
-        } else {
-            applicationContext.startService(restartIntent)
-        }
+        Log.d("MedicationService", "Service destroyed")
+        // NOTE: No self-restart here anymore.
+        // Reminders are driven entirely by AlarmManager (AlarmReceiver),
+        // which fires independently of whether this service is alive.
+        // An unconditional self-restart is an anti-pattern that some OEM
+        // battery managers (Xiaomi, Huawei, Samsung, ...) detect and punish
+        // by blocklisting the app's autostart entirely - the opposite of
+        // what we want. START_STICKY already lets the OS restart the
+        // service in a throttled, system-controlled way if needed.
+        // The service is re-started on: app open (MainActivity), device
+        // boot (BootReceiver), and each fired alarm (AlarmReceiver).
     }
 
     private fun createNotificationChannel() {
