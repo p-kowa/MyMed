@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,10 +48,10 @@ fun MedicationListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Medikamente verwalten") },
+                title = { Text(stringResource(R.string.list_manage_medications_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zurück")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 }
             )
@@ -58,7 +59,7 @@ fun MedicationListScreen(
         // FAB = Floating Action Button (round + button bottom-right)
         floatingActionButton = {
             FloatingActionButton(onClick = onNavigateToAdd) {
-                Icon(Icons.Default.Add, contentDescription = "Hinzufügen")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add))
             }
         }
     ) { innerPadding ->
@@ -75,9 +76,9 @@ fun MedicationListScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Noch keine Medikamente", fontSize = 18.sp, fontWeight = FontWeight.Medium)
+                    Text(stringResource(R.string.list_empty_title), fontSize = 18.sp, fontWeight = FontWeight.Medium)
                     Text(
-                        "Tippe auf + um eines hinzuzufügen",
+                        stringResource(R.string.list_empty_subtitle),
                         fontSize = 14.sp,
                         color = Color.Gray
                     )
@@ -146,7 +147,7 @@ fun MedicationListItem(
                     )
                 }
                 Text(
-                    text = if (medication.active) "Aktiv" else "Inaktiv",
+                    text = if (medication.active) stringResource(R.string.status_active) else stringResource(R.string.status_inactive),
                     fontSize = 12.sp,
                     color = if (medication.active) Color(0xFF4CAF50) else Color.Gray
                 )

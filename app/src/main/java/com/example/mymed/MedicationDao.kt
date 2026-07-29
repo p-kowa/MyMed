@@ -16,11 +16,15 @@ interface MedicationDao {
     @Query("SELECT * FROM medications WHERE active = 1")
     suspend fun getAllActiveMedications(): List<MyMedication>
 
-    // Load a single medication by ID
-    @Query("SELECT * FROM medications WHERE id = :id")
-    suspend fun getById(id: Int): MyMedication?
+     // Load a single medication by ID
+     @Query("SELECT * FROM medications WHERE id = :id")
+     suspend fun getById(id: Int): MyMedication?
 
-    // Insert new medication, returns generated ID
+     // Search medications by name (for AutoComplete)
+     @Query("SELECT DISTINCT name FROM medications WHERE name LIKE '%' || :query || '%' ORDER BY name LIMIT 10")
+     suspend fun searchMedicationNames(query: String): List<String>
+
+     // Insert new medication, returns generated ID
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(medication: MyMedication): Long
 

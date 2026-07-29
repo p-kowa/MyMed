@@ -1,3 +1,91 @@
 <resources>
     <string name="app_name">MyMed</string>
+    <string name="main_title">MyMed</string>
+    <string name="cd_manage_medications">Manage medications</string>
+    <string name="main_time_for_medications">Time for your medications!</string>
+    <string name="main_no_medications">No medications available</string>
+    <string name="main_add_medications_hint">Tap ⚙️ to add medications</string>
+    <string name="main_snooze_label">⏰ Snooze (%1$d min) • %2$dx left</string>
+    <string name="main_all_taken_today">✓ Everything taken today</string>
+    <string name="main_alarm_snooze">Snooze</string>
+    <string name="main_alarm_taken">Taken</string>
+    <string name="main_snooze_unavailable">⏰ Snooze unavailable</string>
+    <string name="main_snooze_settings">Snooze settings</string>
+    <string name="main_stop_alarm">⏹ Stop alarm</string>
+    <string name="main_snooze_settings_title">⏰ Snooze settings</string>
+    <string name="main_snooze_time">Snooze time:</string>
+    <string name="main_snooze_max_per_day">Maximum per day:</string>
+    <string name="main_snooze_today_count">Today: %1$dx of %2$dx</string>
+
+    <string name="common_save">Save</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_add">Add</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_reset">Reset</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_add">Add</string>
+
+    <string name="list_manage_medications_title">Manage medications</string>
+    <string name="list_empty_title">No medications yet</string>
+    <string name="list_empty_subtitle">Tap + to add one</string>
+    <string name="status_active">Active</string>
+    <string name="status_inactive">Inactive</string>
+
+    <string name="detail_title_edit">Edit medication</string>
+    <string name="detail_title_new">New medication</string>
+    <string name="detail_scan_button">📷 Scan package (ML Kit)</string>
+    <string name="detail_scan_processing">Recognizing text…</string>
+    <string name="detail_scan_error">Scan failed: %1$s</string>
+    <string name="detail_camera_permission_denied">Camera permission denied. Please allow it in app settings.</string>
+    <string name="detail_name_required">Name *</string>
+    <string name="detail_name_placeholder">e.g. Aspirin</string>
+    <string name="detail_dose">Dosage</string>
+    <string name="detail_dose_placeholder">e.g. 100mg or 1 tablet</string>
+    <string name="detail_notes">Notes</string>
+    <string name="detail_notes_placeholder">e.g. take after meals</string>
+    <string name="detail_active">Active</string>
+    <string name="detail_active_subtitle">Reminders are shown</string>
+    <string name="detail_manage_reminders">⏰ Manage reminders</string>
+    <string name="detail_delete_title">Delete medication?</string>
+    <string name="detail_delete_text">"%1$s" will be deleted permanently.</string>
+
+    <string name="scan_review_title">📋 Scan result</string>
+    <string name="scan_review_subtitle">Please review and correct detected fields</string>
+    <string name="scan_show_full_text">▼ Show full text</string>
+    <string name="scan_hide_full_text">▲ Hide full text</string>
+    <string name="scan_apply">Apply</string>
+    <string name="scan_discard">Discard</string>
+
+    <string name="reminder_sheet_title">⏰ Reminders</string>
+    <string name="reminder_sheet_empty">No reminders yet.\nTap + to add one.</string>
+    <string name="reminder_add_new">Add new reminder</string>
+    <string name="reminder_dialog_title">New reminder</string>
+    <string name="reminder_weekdays">Weekdays:</string>
+    <string name="reminder_snooze_interval">Snooze interval:</string>
+    <string name="reminder_snooze_info">Snooze: %1$d min</string>
+    <string name="cd_delete_reminder">Delete reminder</string>
+
+    <string name="day_mon">Mo</string>
+    <string name="day_tue">Tu</string>
+    <string name="day_wed">We</string>
+    <string name="day_thu">Th</string>
+    <string name="day_fri">Fr</string>
+    <string name="day_sat">Sa</string>
+    <string name="day_sun">Su</string>
+    <string name="days_daily">Daily</string>
+    <string name="days_workdays">Mon–Fri</string>
+    <string name="days_weekend">Weekend</string>
+
+    <string name="alarm_channel_name">Medication alarm</string>
+    <string name="alarm_channel_desc">Reminder to take medication</string>
+    <string name="alarm_notif_title">💊 Time for your medications!</string>
+    <string name="alarm_notif_text">Tap to open the list</string>
+    <string name="alarm_notif_big_text">It is time to take your medications.\nPlease check the list.</string>
+    <string name="alarm_action_all_taken">✅ All taken</string>
+    <string name="alarm_action_snooze">⏰ Snooze %1$dmin</string>
+
+    <string name="service_channel_name">Medication reminders</string>
+    <string name="service_channel_desc">Indicates that medication reminders are active</string>
+    <string name="service_notif_title">💊 Medication reminder active</string>
+    <string name="service_notif_text">Reminders are configured</string>
 </resources>

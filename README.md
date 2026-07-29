@@ -8,8 +8,8 @@ An Android app built with Jetpack Compose to remind you to take your medications
 - 💊 **Medication list** - Persisted in a local Room database
 - ✅ **Checkbox tracking** - Mark medications as taken; taken items show a strikethrough on name and time
 - 📅 **Per-medication reminders** - Configure multiple alarm times per medication, with weekday selection (Mon–Sun)
-- 🔔 **Alarm-style notifications** - Full-screen alert, continuous sound + vibration (like a real alarm clock), with an in-app "Stop Alarm" button
-- 😴 **Snooze** - Configurable snooze duration and max repeat count, tracked per alarm session (not globally per day)
+- 🔔 **Alarm-style notifications** - Full-screen alert, continuous sound + vibration (like a real alarm clock); alarm mode shows two buttons: "Snooze" and "Taken"
+- 😴 **Snooze** - Per-reminder configurable snooze interval (set when creating the reminder), unlimited snooze attempts per alarm session
 - 📷 **ML Kit text recognition** - Scan a medication package with the camera; the app extracts name, dosage, and usage notes automatically
 - 🔁 **Auto-start & resilience** - Foreground service, boot receiver, and exact alarms (`setExactAndAllowWhileIdle`) so reminders work even after reboot or when the app is closed
 - 🗑️ **Full CRUD** - Add, edit, delete medications and their reminders through the UI
@@ -33,7 +33,7 @@ app/src/main/java/com/example/mymed/
 ├── AlarmSoundManager.kt             # Continuous alarm sound + vibration (start/stop)
 ├── AlarmNotificationManager.kt      # Builds the full-screen alarm notification
 ├── NotificationActionReceiver.kt    # Handles notification button taps
-├── SnoozeManager.kt                 # Snooze settings + per-session counter
+├── SnoozeManager.kt                 # Snooze scheduling (unlimited attempts, respects per-reminder interval)
 ├── MedicationReminderService.kt     # Foreground service (keeps reminders active)
 ├── BootReceiver.kt                  # Re-schedules alarms after device reboot
 └── ui/theme/                        # Compose Material3 theme
@@ -44,7 +44,7 @@ app/src/main/java/com/example/mymed/
 ### Data layer (Room)
 Three entities back the app:
 - **`MyMedication`** - name, dosage, notes, active flag
-- **`Reminder`** - hour/minute, weekday mask, enabled flag, linked to a medication
+- **`Reminder`** - hour/minute, weekday mask, enabled flag, snooze interval (in minutes), linked to a medication
 - **`MedicationHistory`** - timestamped "taken" records, used to determine today's checklist state
 
 ### Main screen (`MedicationViewModel`)
@@ -54,7 +54,11 @@ Combines active medications with today's history entries (via `Flow.combine`) so
 Uses `setExactAndAllowWhileIdle` instead of `setRepeating` for precision, since repeating alarms are inexact and get delayed in Doze mode. Each alarm reschedules its own next occurrence after firing, respecting the configured weekdays.
 
 ### Alarm experience (`AlarmSoundManager` + `AlarmNotificationManager`)
-When a reminder fires: a full-screen notification appears (like a real alarm clock), continuous sound and vibration start, and the app - once opened - shows a prominent "Stop Alarm" button. The user can also act directly from the notification ("All taken" / "Snooze").
+When a reminder fires: a full-screen notification appears (like a real alarm clock), continuous sound and vibration start. Once the app opens, the alarm-mode screen shows two prominent buttons:
+- **"Snooze"** – reschedules the alarm for X minutes later (configurable per reminder, unlimited attempts) and resets checkboxes
+- **"Taken"** – marks all medications as taken, cancels any pending snooze
+
+The user can also act directly from the notification via the same two actions.
 
 ### Package scanning (`MedicationScanHelper`)
 Takes a photo via the camera, runs on-device ML Kit text recognition, and parses the result to pre-fill name, dosage, and usage notes. The photo itself is discarded after scanning - only the recognized text is kept.
@@ -92,8 +96,5 @@ After installing on the target device:
 - History screen (what was taken, when)
 - Home screen widget
 - Multiple user profiles
-- Per-reminder snooze configuration (currently global settings)
 
 Good luck! 💊
-
-

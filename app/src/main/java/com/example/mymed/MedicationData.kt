@@ -21,6 +21,7 @@ data class Reminder(
     val medicationId: Int,
     val hour: Int,
     val minute: Int,
+    val snoozeMinutes: Int = SnoozeManager.DEFAULT_SNOOZE_MINUTES,
     val enabled: Boolean = true,
     // Weekdays as comma-separated list: "1,2,3,4,5,6,7" = every day
     // "1,3,5" = Monday, Wednesday, Friday

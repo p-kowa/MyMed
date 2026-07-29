@@ -48,6 +48,7 @@ object AlarmScheduler {
             putExtra("days_of_week", reminder.daysOfWeek)
             putExtra("hour", reminder.hour)
             putExtra("minute", reminder.minute)
+            putExtra("snooze_minutes", reminder.snoozeMinutes)
         }
         val pendingIntent = PendingIntent.getBroadcast(
             context, reminder.id, intent,
@@ -118,13 +119,14 @@ object AlarmScheduler {
      * Called from AlarmReceiver.
      */
     fun scheduleNext(context: Context, reminderId: Int, medicationId: Int,
-                     daysOfWeek: String, hour: Int, minute: Int) {
+                     daysOfWeek: String, hour: Int, minute: Int, snoozeMinutes: Int) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val reminder = Reminder(
             id = reminderId,
             medicationId = medicationId,
             hour = hour,
             minute = minute,
+            snoozeMinutes = snoozeMinutes,
             enabled = true,
             daysOfWeek = daysOfWeek
         )

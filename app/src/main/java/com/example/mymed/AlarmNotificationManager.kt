@@ -49,10 +49,10 @@ object AlarmNotificationManager {
 
             val channel = NotificationChannel(
                 ALARM_CHANNEL_ID,
-                "Medikamenten-Alarm",
+                context.getString(R.string.alarm_channel_name),
                 NotificationManager.IMPORTANCE_HIGH  // HIGH = heads-up + sound
             ).apply {
-                description = "Erinnerung zur Medikamenteneinnahme"
+                description = context.getString(R.string.alarm_channel_desc)
                 setSound(alarmSound, audioAttributes)
                 enableVibration(true)
                 vibrationPattern = longArrayOf(0, 500, 200, 500, 200, 500)
@@ -113,10 +113,10 @@ object AlarmNotificationManager {
         // --- Build notification ---
         val notification = NotificationCompat.Builder(context, ALARM_CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("💊 Zeit für deine Medikamente!")
-            .setContentText("Tippe um die Liste zu öffnen")
+            .setContentTitle(context.getString(R.string.alarm_notif_title))
+            .setContentText(context.getString(R.string.alarm_notif_text))
             .setStyle(NotificationCompat.BigTextStyle()
-                .bigText("Es ist Zeit deine Medikamente einzunehmen.\nBitte überprüfe die Liste."))
+                .bigText(context.getString(R.string.alarm_notif_big_text)))
             .setPriority(NotificationCompat.PRIORITY_MAX)  // MAX = heads-up
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)  // Visible on lock screen
@@ -130,7 +130,7 @@ object AlarmNotificationManager {
             // Action buttons
             .addAction(
                 android.R.drawable.ic_menu_close_clear_cancel,
-                "✅ Alle genommen",
+                context.getString(R.string.alarm_action_all_taken),
                 allTakenPending
             )
             .apply {
@@ -138,7 +138,7 @@ object AlarmNotificationManager {
                 if (canSnooze) {
                     addAction(
                         android.R.drawable.ic_lock_idle_alarm,
-                        "⏰ Snooze ${snoozeMinutes}min",
+                        context.getString(R.string.alarm_action_snooze, snoozeMinutes),
                         snoozePending
                     )
                 }

@@ -19,11 +19,12 @@ class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val isSnooze = intent.getBooleanExtra("is_snooze", false)
         val reminderId = intent.getIntExtra("reminder_id", -1)
+        val snoozeMinutes = intent.getIntExtra("snooze_minutes", SnoozeManager.DEFAULT_SNOOZE_MINUTES)
         Log.d("AlarmReceiver", if (isSnooze) "Snooze alarm" else "Regular alarm (Reminder $reminderId)")
 
         if (!isSnooze) {
             // New regular alarm -> reset snooze counter for this session
-            SnoozeManager.onNewAlarmFired(context, reminderId)
+            SnoozeManager.onNewAlarmFired(context, reminderId, snoozeMinutes)
 
             // IMPORTANT: Schedule the next occurrence of this alarm,
             // because exact alarms do not auto-repeat.
@@ -32,7 +33,15 @@ class AlarmReceiver : BroadcastReceiver() {
             val hour = intent.getIntExtra("hour", -1)
             val minute = intent.getIntExtra("minute", -1)
             if (reminderId != -1 && hour != -1 && minute != -1) {
-                AlarmScheduler.scheduleNext(context, reminderId, medicationId, daysOfWeek, hour, minute)
+                AlarmScheduler.scheduleNext(
+                    context,
+                    reminderId,
+                    medicationId,
+                    daysOfWeek,
+                    hour,
+                    minute,
+                    snoozeMinutes
+                )
             }
         }
 
@@ -50,8 +59,8 @@ class AlarmReceiver : BroadcastReceiver() {
         // Show alarm notification
         AlarmNotificationManager.showAlarmNotification(
             context = context,
-            snoozeMinutes = SnoozeManager.getSnoozeMinutes(context),
-            canSnooze = SnoozeManager.canSnoozeToday(context)
+            snoozeMinutes = SnoozeManager.getCurrentSnoozeMinutes(context),
+            canSnooze = true
         )
     }
 }

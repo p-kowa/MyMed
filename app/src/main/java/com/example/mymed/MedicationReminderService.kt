@@ -23,7 +23,6 @@ class MedicationReminderService : Service() {
     companion object {
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "medication_reminder_channel"
-        private const val CHANNEL_NAME = "Medikamenten-Erinnerung"
     }
 
     override fun onCreate() {
@@ -67,10 +66,10 @@ class MedicationReminderService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                CHANNEL_NAME,
+                getString(R.string.service_channel_name),
                 NotificationManager.IMPORTANCE_LOW // LOW = no sound/vibration
             ).apply {
-                description = "Zeigt an, dass die Medikamenten-Erinnerung aktiv ist"
+                description = getString(R.string.service_channel_desc)
                 setShowBadge(false)
             }
 
@@ -90,8 +89,8 @@ class MedicationReminderService : Service() {
         )
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("💊 Medikamenten-Erinnerung aktiv")
-            .setContentText("Erinnerungen sind eingerichtet")
+            .setContentTitle(getString(R.string.service_notif_title))
+            .setContentText(getString(R.string.service_notif_text))
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(pendingIntent)
             .setOngoing(true)

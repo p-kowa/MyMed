@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -88,7 +89,7 @@ fun MedicationDetailScreen(
                         try { File(uri.path ?: "").delete() } catch (_: Exception) {}
                     },
                     onError = { e ->
-                        scanError = "Scan fehlgeschlagen: ${e.message}"
+                        scanError = context.getString(R.string.detail_scan_error, e.message ?: "")
                         isScanning = false
                     }
                 )
@@ -115,23 +116,23 @@ fun MedicationDetailScreen(
         if (isGranted) {
             launchCamera()
         } else {
-            scanError = "Kamera-Berechtigung verweigert. Bitte in den App-Einstellungen erlauben."
+            scanError = context.getString(R.string.detail_camera_permission_denied)
         }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (isEditMode) "Medikament bearbeiten" else "Neues Medikament") },
+                title = { Text(if (isEditMode) stringResource(R.string.detail_title_edit) else stringResource(R.string.detail_title_new)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Zurück")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back))
                     }
                 },
                 actions = {
                     if (isEditMode) {
                         IconButton(onClick = { showDeleteDialog = true }) {
-                            Icon(Icons.Default.Delete, "Löschen", tint = Color.Red)
+                            Icon(Icons.Default.Delete, stringResource(R.string.common_delete), tint = Color.Red)
                         }
                     }
                 }
@@ -172,11 +173,11 @@ fun MedicationDetailScreen(
                 if (isScanning) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                     Spacer(Modifier.width(8.dp))
-                    Text("Erkenne Text...", fontSize = 16.sp)
+                    Text(stringResource(R.string.detail_scan_processing), fontSize = 16.sp)
                 } else {
                     Icon(Icons.Default.DocumentScanner, null)
                     Spacer(Modifier.width(8.dp))
-                    Text("📷 Packung scannen (ML Kit)", fontSize = 16.sp)
+                    Text(stringResource(R.string.detail_scan_button), fontSize = 16.sp)
                 }
             }
 
@@ -195,8 +196,8 @@ fun MedicationDetailScreen(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Name *") },
-                placeholder = { Text("z.B. Aspirin") },
+                label = { Text(stringResource(R.string.detail_name_required)) },
+                placeholder = { Text(stringResource(R.string.detail_name_placeholder)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -204,8 +205,8 @@ fun MedicationDetailScreen(
             OutlinedTextField(
                 value = dosage,
                 onValueChange = { dosage = it },
-                label = { Text("Dosis") },
-                placeholder = { Text("z.B. 100mg oder 1 Tablette") },
+                label = { Text(stringResource(R.string.detail_dose)) },
+                placeholder = { Text(stringResource(R.string.detail_dose_placeholder)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -213,8 +214,8 @@ fun MedicationDetailScreen(
             OutlinedTextField(
                 value = notes,
                 onValueChange = { notes = it },
-                label = { Text("Notizen") },
-                placeholder = { Text("z.B. nach dem Essen nehmen") },
+                label = { Text(stringResource(R.string.detail_notes)) },
+                placeholder = { Text(stringResource(R.string.detail_notes_placeholder)) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3
             )
@@ -228,9 +229,9 @@ fun MedicationDetailScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Aktiv", fontWeight = FontWeight.Medium, fontSize = 16.sp)
+                        Text(stringResource(R.string.detail_active), fontWeight = FontWeight.Medium, fontSize = 16.sp)
                         Text(
-                            "Erinnerungen werden angezeigt",
+                            stringResource(R.string.detail_active_subtitle),
                             fontSize = 12.sp,
                             color = Color.Gray
                         )
@@ -247,7 +248,7 @@ fun MedicationDetailScreen(
                 ) {
                     Icon(Icons.Default.Notifications, null)
                     Spacer(Modifier.width(8.dp))
-                    Text("⏰ Erinnerungen verwalten", fontSize = 16.sp)
+                    Text(stringResource(R.string.detail_manage_reminders), fontSize = 16.sp)
                 }
             }
 
@@ -270,7 +271,7 @@ fun MedicationDetailScreen(
                 enabled = name.isNotBlank()
             ) {
                 Text(
-                    text = if (isEditMode) "Speichern" else "Hinzufügen",
+                    text = if (isEditMode) stringResource(R.string.common_save) else stringResource(R.string.common_add),
                     fontSize = 16.sp
                 )
             }
@@ -281,8 +282,8 @@ fun MedicationDetailScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Medikament löschen?") },
-            text = { Text("\"$name\" wird dauerhaft gelöscht.") },
+            title = { Text(stringResource(R.string.detail_delete_title)) },
+            text = { Text(stringResource(R.string.detail_delete_text, name)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -292,10 +293,10 @@ fun MedicationDetailScreen(
                         }
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
-                ) { Text("Löschen") }
+                ) { Text(stringResource(R.string.common_delete)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Abbrechen") }
+                TextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }
@@ -309,109 +310,167 @@ fun MedicationDetailScreen(
         )
     }
 
-    // ML Kit review dialog - appears after successful scan
-    scanResult?.let { result ->
-        ScanReviewDialog(
-            scanResult = result,
-            onConfirm = { confirmedName, confirmedDosage, confirmedNotes ->
-                // Pre-fill fields with recognized text (only if non-empty)
-                if (confirmedName.isNotBlank()) name = confirmedName
-                if (confirmedDosage.isNotBlank()) dosage = confirmedDosage
-                if (confirmedNotes.isNotBlank()) notes = confirmedNotes
-                scanResult = null
-            },
-            onDismiss = { scanResult = null }
-        )
-    }
+     // ML Kit review dialog - appears after successful scan
+     scanResult?.let { result ->
+         ScanReviewDialog(
+             scanResult = result,
+             dao = db.medicationDao(),
+             onConfirm = { confirmedName, confirmedDosage, confirmedNotes ->
+                 // Pre-fill fields with recognized text (only if non-empty)
+                 if (confirmedName.isNotBlank()) name = confirmedName
+                 if (confirmedDosage.isNotBlank()) dosage = confirmedDosage
+                 if (confirmedNotes.isNotBlank()) notes = confirmedNotes
+                 scanResult = null
+             },
+             onDismiss = { scanResult = null }
+         )
+     }
 }
 
 /**
- * Dialog: Shows recognized text for confirmation/correction.
+ * Dialog: Shows recognized text for confirmation/correction with AutoComplete for medication names.
  * All fields are editable before applying.
  */
 @Composable
 fun ScanReviewDialog(
-    scanResult: ScanResult,
-    onConfirm: (name: String, dosage: String, notes: String) -> Unit,
-    onDismiss: () -> Unit
+     scanResult: ScanResult,
+     dao: MedicationDao,
+     onConfirm: (name: String, dosage: String, notes: String) -> Unit,
+     onDismiss: () -> Unit
 ) {
-    var editName by remember { mutableStateOf(scanResult.name) }
-    var editDosage by remember { mutableStateOf(scanResult.dosage) }
-    var editNotes by remember { mutableStateOf(scanResult.notes) }
-    var showRawText by remember { mutableStateOf(false) }
+     var editName by remember { mutableStateOf(scanResult.name) }
+     var editDosage by remember { mutableStateOf(scanResult.dosage) }
+     var editNotes by remember { mutableStateOf(scanResult.notes) }
+     var showRawText by remember { mutableStateOf(false) }
+     var nameSuggestions by remember { mutableStateOf(listOf<String>()) }
+     var showNameSuggestions by remember { mutableStateOf(false) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Column {
-                Text("📋 Scan-Ergebnis", fontWeight = FontWeight.Bold)
-                Text(
-                    "Bitte überprüfe und korrigiere die erkannten Felder",
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-            }
-        },
-        text = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedTextField(
-                    value = editName,
-                    onValueChange = { editName = it },
-                    label = { Text("Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-                OutlinedTextField(
-                    value = editDosage,
-                    onValueChange = { editDosage = it },
-                    label = { Text("Dosis") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-                OutlinedTextField(
-                    value = editNotes,
-                    onValueChange = { editNotes = it },
-                    label = { Text("Notizen") },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 2
-                )
+     val scope = rememberCoroutineScope()
 
-                // Expand/collapse full text for reference
-                TextButton(
-                    onClick = { showRawText = !showRawText },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        if (showRawText) "▲ Volltext ausblenden" else "▼ Vollständigen Text anzeigen",
-                        fontSize = 12.sp
-                    )
-                }
-                if (showRawText) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        shape = MaterialTheme.shapes.small,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = scanResult.rawText.take(500)
-                                .let { if (scanResult.rawText.length > 500) "$it..." else it },
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(8.dp),
-                            lineHeight = 16.sp
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            Button(onClick = { onConfirm(editName, editDosage, editNotes) }) {
-                Text("Übernehmen")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Verwerfen") }
-        }
-    )
+     // Load name suggestions when user types
+     val onNameChange: (String) -> Unit = { newName ->
+         editName = newName
+         showNameSuggestions = newName.length > 1
+         if (newName.length > 1) {
+             scope.launch {
+                 nameSuggestions = dao.searchMedicationNames(newName)
+             }
+         } else {
+             nameSuggestions = emptyList()
+         }
+     }
+
+     AlertDialog(
+         onDismissRequest = onDismiss,
+         title = {
+             Column {
+                 Text(stringResource(R.string.scan_review_title), fontWeight = FontWeight.Bold)
+                 Text(
+                     stringResource(R.string.scan_review_subtitle),
+                     fontSize = 12.sp,
+                     color = Color.Gray
+                 )
+             }
+         },
+         text = {
+             Column(
+                 verticalArrangement = Arrangement.spacedBy(12.dp)
+             ) {
+                 // Name field with AutoComplete dropdown
+                 Box(modifier = Modifier.fillMaxWidth()) {
+                     OutlinedTextField(
+                         value = editName,
+                         onValueChange = onNameChange,
+                         label = { Text(stringResource(R.string.detail_name_required).removeSuffix(" *")) },
+                         modifier = Modifier.fillMaxWidth(),
+                         singleLine = true
+                     )
+                     
+                     // AutoComplete dropdown
+                     if (showNameSuggestions && nameSuggestions.isNotEmpty()) {
+                         Surface(
+                             modifier = Modifier
+                                 .fillMaxWidth()
+                                 .padding(top = 48.dp),
+                             shape = MaterialTheme.shapes.small,
+                             color = MaterialTheme.colorScheme.surface,
+                             shadowElevation = 8.dp
+                         ) {
+                             Column(
+                                 modifier = Modifier
+                                     .fillMaxWidth()
+                                     .padding(8.dp)
+                             ) {
+                                 nameSuggestions.forEach { suggestion ->
+                                     TextButton(
+                                         onClick = {
+                                             editName = suggestion
+                                             showNameSuggestions = false
+                                             nameSuggestions = emptyList()
+                                         },
+                                         modifier = Modifier.fillMaxWidth()
+                                     ) {
+                                         Text(
+                                             text = suggestion,
+                                             modifier = Modifier.fillMaxWidth(),
+                                             color = MaterialTheme.colorScheme.onSurface
+                                         )
+                                     }
+                                 }
+                             }
+                         }
+                     }
+                 }
+
+                 OutlinedTextField(
+                     value = editDosage,
+                     onValueChange = { editDosage = it },
+                     label = { Text(stringResource(R.string.detail_dose)) },
+                     modifier = Modifier.fillMaxWidth(),
+                     singleLine = true
+                 )
+                 OutlinedTextField(
+                     value = editNotes,
+                     onValueChange = { editNotes = it },
+                     label = { Text(stringResource(R.string.detail_notes)) },
+                     modifier = Modifier.fillMaxWidth(),
+                     minLines = 2
+                 )
+
+                 // Expand/collapse full text for reference
+                 TextButton(
+                     onClick = { showRawText = !showRawText },
+                     modifier = Modifier.fillMaxWidth()
+                 ) {
+                     Text(
+                         if (showRawText) stringResource(R.string.scan_hide_full_text) else stringResource(R.string.scan_show_full_text),
+                         fontSize = 12.sp
+                     )
+                 }
+                 if (showRawText) {
+                     Surface(
+                         color = MaterialTheme.colorScheme.surfaceVariant,
+                         shape = MaterialTheme.shapes.small,
+                         modifier = Modifier.fillMaxWidth()
+                     ) {
+                         Text(
+                             text = scanResult.rawText.take(500)
+                                 .let { if (scanResult.rawText.length > 500) "$it..." else it },
+                             fontSize = 11.sp,
+                             modifier = Modifier.padding(8.dp),
+                             lineHeight = 16.sp
+                         )
+                     }
+                 }
+             }
+         },
+         confirmButton = {
+             Button(onClick = { onConfirm(editName, editDosage, editNotes) }) {
+                 Text(stringResource(R.string.scan_apply))
+             }
+         },
+         dismissButton = {
+             TextButton(onClick = onDismiss) { Text(stringResource(R.string.scan_discard)) }
+         }
+     )
 }

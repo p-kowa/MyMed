@@ -1,0 +1,91 @@
+<resources>
+    <string name="app_name">MyMed</string>
+    <string name="main_title">MyMed</string>
+    <string name="cd_manage_medications">Zarządzaj lekami</string>
+    <string name="main_time_for_medications">Czas na twoje leki!</string>
+    <string name="main_no_medications">Brak leków</string>
+    <string name="main_add_medications_hint">Naciśnij ⚙️, aby dodać leki</string>
+    <string name="main_snooze_label">⏰ Drzemka (%1$d min) • pozostało %2$dx</string>
+    <string name="main_all_taken_today">✓ Dzisiaj wszystko przyjęte</string>
+    <string name="main_alarm_snooze">Drzemka</string>
+    <string name="main_alarm_taken">Przyjęte</string>
+    <string name="main_snooze_unavailable">⏰ Drzemka niedostępna</string>
+    <string name="main_snooze_settings">Ustawienia drzemki</string>
+    <string name="main_stop_alarm">⏹ Zatrzymaj alarm</string>
+    <string name="main_snooze_settings_title">⏰ Ustawienia drzemki</string>
+    <string name="main_snooze_time">Czas drzemki:</string>
+    <string name="main_snooze_max_per_day">Maksymalnie dziennie:</string>
+    <string name="main_snooze_today_count">Dzisiaj: %1$dx z %2$dx</string>
+
+    <string name="common_save">Zapisz</string>
+    <string name="common_cancel">Anuluj</string>
+    <string name="common_add">Dodaj</string>
+    <string name="common_delete">Usuń</string>
+    <string name="common_reset">Resetuj</string>
+    <string name="cd_back">Wstecz</string>
+    <string name="cd_add">Dodaj</string>
+
+    <string name="list_manage_medications_title">Zarządzaj lekami</string>
+    <string name="list_empty_title">Brak leków</string>
+    <string name="list_empty_subtitle">Naciśnij +, aby dodać</string>
+    <string name="status_active">Aktywny</string>
+    <string name="status_inactive">Nieaktywny</string>
+
+    <string name="detail_title_edit">Edytuj lek</string>
+    <string name="detail_title_new">Nowy lek</string>
+    <string name="detail_scan_button">📷 Skanuj opakowanie (ML Kit)</string>
+    <string name="detail_scan_processing">Rozpoznawanie tekstu…</string>
+    <string name="detail_scan_error">Skan nie udał się: %1$s</string>
+    <string name="detail_camera_permission_denied">Brak uprawnienia do kamery. Zezwól w ustawieniach aplikacji.</string>
+    <string name="detail_name_required">Nazwa *</string>
+    <string name="detail_name_placeholder">np. Aspirin</string>
+    <string name="detail_dose">Dawka</string>
+    <string name="detail_dose_placeholder">np. 100mg lub 1 tabletka</string>
+    <string name="detail_notes">Notatki</string>
+    <string name="detail_notes_placeholder">np. przyjmować po jedzeniu</string>
+    <string name="detail_active">Aktywny</string>
+    <string name="detail_active_subtitle">Przypomnienia są wyświetlane</string>
+    <string name="detail_manage_reminders">⏰ Zarządzaj przypomnieniami</string>
+    <string name="detail_delete_title">Usunąć lek?</string>
+    <string name="detail_delete_text">"%1$s" zostanie trwale usunięty.</string>
+
+    <string name="scan_review_title">📋 Wynik skanu</string>
+    <string name="scan_review_subtitle">Sprawdź i popraw wykryte pola</string>
+    <string name="scan_show_full_text">▼ Pokaż pełny tekst</string>
+    <string name="scan_hide_full_text">▲ Ukryj pełny tekst</string>
+    <string name="scan_apply">Zastosuj</string>
+    <string name="scan_discard">Odrzuć</string>
+
+    <string name="reminder_sheet_title">⏰ Przypomnienia</string>
+    <string name="reminder_sheet_empty">Brak przypomnień.\nNaciśnij +, aby dodać.</string>
+    <string name="reminder_add_new">Dodaj nowe przypomnienie</string>
+    <string name="reminder_dialog_title">Nowe przypomnienie</string>
+    <string name="reminder_weekdays">Dni tygodnia:</string>
+    <string name="reminder_snooze_interval">Interwał drzemki:</string>
+    <string name="reminder_snooze_info">Drzemka: %1$d min</string>
+    <string name="cd_delete_reminder">Usuń przypomnienie</string>
+
+    <string name="day_mon">Pn</string>
+    <string name="day_tue">Wt</string>
+    <string name="day_wed">Śr</string>
+    <string name="day_thu">Cz</string>
+    <string name="day_fri">Pt</string>
+    <string name="day_sat">So</string>
+    <string name="day_sun">Nd</string>
+    <string name="days_daily">Codziennie</string>
+    <string name="days_workdays">Pn–Pt</string>
+    <string name="days_weekend">Weekend</string>
+
+    <string name="alarm_channel_name">Alarm leków</string>
+    <string name="alarm_channel_desc">Przypomnienie o przyjęciu leków</string>
+    <string name="alarm_notif_title">💊 Czas na twoje leki!</string>
+    <string name="alarm_notif_text">Naciśnij, aby otworzyć listę</string>
+    <string name="alarm_notif_big_text">Czas przyjąć leki.\nSprawdź listę.</string>
+    <string name="alarm_action_all_taken">✅ Wszystko przyjęte</string>
+    <string name="alarm_action_snooze">⏰ Drzemka %1$dmin</string>
+
+    <string name="service_channel_name">Przypomnienia o lekach</string>
+    <string name="service_channel_desc">Informuje, że przypomnienia o lekach są aktywne</string>
+    <string name="service_notif_title">💊 Przypomnienia o lekach aktywne</string>
+    <string name="service_notif_text">Przypomnienia są skonfigurowane</string>
+</resources>

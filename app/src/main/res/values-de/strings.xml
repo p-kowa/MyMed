@@ -1,0 +1,91 @@
+<resources>
+    <string name="app_name">MyMed</string>
+    <string name="main_title">MyMed</string>
+    <string name="cd_manage_medications">Medikamente verwalten</string>
+    <string name="main_time_for_medications">Zeit für deine Medikamente!</string>
+    <string name="main_no_medications">Keine Medikamente vorhanden</string>
+    <string name="main_add_medications_hint">Tippe auf ⚙️ um Medikamente hinzuzufügen</string>
+    <string name="main_snooze_label">⏰ Snooze (%1$d Min) • noch %2$dx</string>
+    <string name="main_all_taken_today">✓ Heute alles genommen</string>
+    <string name="main_alarm_snooze">Snooze</string>
+    <string name="main_alarm_taken">Genommen</string>
+    <string name="main_snooze_unavailable">⏰ Snooze nicht mehr verfügbar</string>
+    <string name="main_snooze_settings">Snooze-Einstellungen</string>
+    <string name="main_stop_alarm">⏹ Alarm stoppen</string>
+    <string name="main_snooze_settings_title">⏰ Snooze-Einstellungen</string>
+    <string name="main_snooze_time">Snooze-Zeit:</string>
+    <string name="main_snooze_max_per_day">Maximal pro Tag:</string>
+    <string name="main_snooze_today_count">Heute: %1$dx von %2$dx</string>
+
+    <string name="common_save">Speichern</string>
+    <string name="common_cancel">Abbrechen</string>
+    <string name="common_add">Hinzufügen</string>
+    <string name="common_delete">Löschen</string>
+    <string name="common_reset">Zurücksetzen</string>
+    <string name="cd_back">Zurück</string>
+    <string name="cd_add">Hinzufügen</string>
+
+    <string name="list_manage_medications_title">Medikamente verwalten</string>
+    <string name="list_empty_title">Noch keine Medikamente</string>
+    <string name="list_empty_subtitle">Tippe auf + um eines hinzuzufügen</string>
+    <string name="status_active">Aktiv</string>
+    <string name="status_inactive">Inaktiv</string>
+
+    <string name="detail_title_edit">Medikament bearbeiten</string>
+    <string name="detail_title_new">Neues Medikament</string>
+    <string name="detail_scan_button">📷 Packung scannen (ML Kit)</string>
+    <string name="detail_scan_processing">Erkenne Text…</string>
+    <string name="detail_scan_error">Scan fehlgeschlagen: %1$s</string>
+    <string name="detail_camera_permission_denied">Kamera-Berechtigung verweigert. Bitte in den App-Einstellungen erlauben.</string>
+    <string name="detail_name_required">Name *</string>
+    <string name="detail_name_placeholder">z.B. Aspirin</string>
+    <string name="detail_dose">Dosis</string>
+    <string name="detail_dose_placeholder">z.B. 100mg oder 1 Tablette</string>
+    <string name="detail_notes">Notizen</string>
+    <string name="detail_notes_placeholder">z.B. nach dem Essen nehmen</string>
+    <string name="detail_active">Aktiv</string>
+    <string name="detail_active_subtitle">Erinnerungen werden angezeigt</string>
+    <string name="detail_manage_reminders">⏰ Erinnerungen verwalten</string>
+    <string name="detail_delete_title">Medikament löschen?</string>
+    <string name="detail_delete_text">"%1$s" wird dauerhaft gelöscht.</string>
+
+    <string name="scan_review_title">📋 Scan-Ergebnis</string>
+    <string name="scan_review_subtitle">Bitte überprüfe und korrigiere die erkannten Felder</string>
+    <string name="scan_show_full_text">▼ Vollständigen Text anzeigen</string>
+    <string name="scan_hide_full_text">▲ Volltext ausblenden</string>
+    <string name="scan_apply">Übernehmen</string>
+    <string name="scan_discard">Verwerfen</string>
+
+    <string name="reminder_sheet_title">⏰ Erinnerungen</string>
+    <string name="reminder_sheet_empty">Noch keine Erinnerungen.\nTippe auf + um eine hinzuzufügen.</string>
+    <string name="reminder_add_new">Neue Erinnerung hinzufügen</string>
+    <string name="reminder_dialog_title">Neue Erinnerung</string>
+    <string name="reminder_weekdays">Wochentage:</string>
+    <string name="reminder_snooze_interval">Snooze-Intervall:</string>
+    <string name="reminder_snooze_info">Snooze: %1$d Min</string>
+    <string name="cd_delete_reminder">Erinnerung löschen</string>
+
+    <string name="day_mon">Mo</string>
+    <string name="day_tue">Di</string>
+    <string name="day_wed">Mi</string>
+    <string name="day_thu">Do</string>
+    <string name="day_fri">Fr</string>
+    <string name="day_sat">Sa</string>
+    <string name="day_sun">So</string>
+    <string name="days_daily">Täglich</string>
+    <string name="days_workdays">Mo–Fr</string>
+    <string name="days_weekend">Wochenende</string>
+
+    <string name="alarm_channel_name">Medikamenten-Alarm</string>
+    <string name="alarm_channel_desc">Erinnerung zur Medikamenteneinnahme</string>
+    <string name="alarm_notif_title">💊 Zeit für deine Medikamente!</string>
+    <string name="alarm_notif_text">Tippe um die Liste zu öffnen</string>
+    <string name="alarm_notif_big_text">Es ist Zeit deine Medikamente einzunehmen.\nBitte überprüfe die Liste.</string>
+    <string name="alarm_action_all_taken">✅ Alle genommen</string>
+    <string name="alarm_action_snooze">⏰ Snooze %1$dmin</string>
+
+    <string name="service_channel_name">Medikamenten-Erinnerung</string>
+    <string name="service_channel_desc">Zeigt an, dass die Medikamenten-Erinnerung aktiv ist</string>
+    <string name="service_notif_title">💊 Medikamenten-Erinnerung aktiv</string>
+    <string name="service_notif_text">Erinnerungen sind eingerichtet</string>
+</resources>

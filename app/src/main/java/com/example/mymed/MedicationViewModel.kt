@@ -9,8 +9,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
@@ -104,38 +102,27 @@ class MedicationViewModel(
         }
     }
 
-    // Snooze status
-    private val _snoozeCountToday = kotlinx.coroutines.flow.MutableStateFlow(
-        SnoozeManager.getSnoozeCountToday(app)
-    )
-    val snoozeCountToday: StateFlow<Int> = _snoozeCountToday
-    val maxSnoozeCount: Int get() = SnoozeManager.getMaxSnoozeCount(app)
-    val snoozeMinutes: Int get() = SnoozeManager.getSnoozeMinutes(app)
-    val canSnooze: Boolean get() = SnoozeManager.canSnoozeToday(app)
-
-    // Refresh counter from SharedPreferences (e.g., after midnight or settings dialog)
-    fun refreshSnoozeCount() {
-        _snoozeCountToday.value = SnoozeManager.getSnoozeCountToday(app)
-    }
-
-    // Reset snooze counter for today (e.g., from settings dialog)
-    fun resetSnoozeCountToday() {
-        SnoozeManager.resetTodayCount(app)
-        _snoozeCountToday.value = 0
-    }
-
     fun snooze() {
         // 1. Schedule alarm (handled by SnoozeManager)
-        val success = SnoozeManager.snooze(app)
-        if (!success) return  // Max count reached
+        SnoozeManager.snooze(app)
 
         // 2. Reset checkboxes (delete today's history)
         viewModelScope.launch {
             medications.value.forEach { item ->
                 dao.deleteTodayEntry(item.id, startOfToday())
             }
-            // 3. Update counter so UI reacts immediately
-            _snoozeCountToday.value = SnoozeManager.getSnoozeCountToday(app)
+        }
+    }
+
+    fun markAllAsTakenNow() {
+        viewModelScope.launch {
+            val now = System.currentTimeMillis()
+            medications.value.forEach { item ->
+                if (!item.isChecked) {
+                    dao.insertHistory(MedicationHistory(medicationId = item.id, takenAt = now))
+                }
+            }
+            SnoozeManager.cancelSnooze(app)
         }
     }
 

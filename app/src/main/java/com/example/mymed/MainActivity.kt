@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -36,6 +37,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class MainActivity : ComponentActivity() {
+
+    private var isAlarmActiveState by mutableStateOf(false)
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -55,17 +58,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyMedTheme {
                 val navController = rememberNavController()
-                // isAlarmActive: true when app is opened from an alarm
-                var isAlarmActive by remember {
-                    mutableStateOf(AlarmSoundManager.isAlarmPlaying())
-                }
+                val isAlarmActive = isAlarmActiveState
                 AppNavigation(
                     navController = navController,
                     isAlarmActive = isAlarmActive,
-                    onStopAlarm = {
+                    onDismissAlarm = {
                         AlarmSoundManager.stop(this@MainActivity)
                         AlarmNotificationManager.dismissAlarmNotification(this@MainActivity)
-                        isAlarmActive = false
+                        isAlarmActiveState = false
                     }
                 )
             }
@@ -74,7 +74,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        // When returning to app, alarm state is reflected by recomposition
+        isAlarmActiveState = AlarmSoundManager.isAlarmPlaying()
     }
 
     private fun requestNotificationPermission() {
@@ -101,7 +101,7 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation(
     navController: NavHostController,
     isAlarmActive: Boolean = false,
-    onStopAlarm: () -> Unit = {}
+    onDismissAlarm: () -> Unit = {}
 ) {
     NavHost(
         navController = navController,
@@ -111,7 +111,7 @@ fun AppNavigation(
             MedicationReminderScreen(
                 onNavigateToMedications = { navController.navigate("medications") },
                 isAlarmActive = isAlarmActive,
-                onStopAlarm = onStopAlarm
+                onDismissAlarm = onDismissAlarm
             )
         }
         composable("medications") {
@@ -139,7 +139,7 @@ fun AppNavigation(
 fun MedicationReminderScreen(
     onNavigateToMedications: () -> Unit = {},
     isAlarmActive: Boolean = false,
-    onStopAlarm: () -> Unit = {}
+    onDismissAlarm: () -> Unit = {}
 ) {
     // Create ViewModel with DB factory
     val context = LocalContext.current
@@ -153,10 +153,21 @@ fun MedicationReminderScreen(
 
     // StateFlow -> State (Compose reacts automatically to updates)
     val medications by viewModel.medications.collectAsState()
-    val snoozeCountToday by viewModel.snoozeCountToday.collectAsState()
-
-    var showSnoozeDialog by remember { mutableStateOf(false) }
     var currentTime by remember { mutableStateOf(getCurrentTime()) }
+    var localAlarmActive by remember { mutableStateOf(isAlarmActive) }
+
+    LaunchedEffect(isAlarmActive) {
+        localAlarmActive = isAlarmActive
+    }
+
+    // Falls der Alarm startet waehrend die App schon offen ist.
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(500L)
+            localAlarmActive = AlarmSoundManager.isAlarmPlaying()
+        }
+    }
+
     LaunchedEffect(Unit) {
         while (true) {
             kotlinx.coroutines.delay(1000L)
@@ -167,10 +178,10 @@ fun MedicationReminderScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("MyMed") },
+                title = { Text(stringResource(R.string.main_title)) },
                 actions = {
                     IconButton(onClick = onNavigateToMedications) {
-                        Icon(Icons.Default.Settings, contentDescription = "Medikamente verwalten")
+                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.cd_manage_medications))
                     }
                 }
             )
@@ -187,29 +198,55 @@ fun MedicationReminderScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-                // 🔴 STOP button: visible only while alarm is active (sound playing)
-                if (isAlarmActive) {
-                    Button(
-                        onClick = onStopAlarm,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(72.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error
-                        ),
-                        shape = MaterialTheme.shapes.large
-                    ) {
-                        Text(
-                            text = "⏹ Alarm stoppen",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onError
-                        )
+                // Alarmmodus: genau zwei Aktionen wie beim Wecker.
+                if (localAlarmActive) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Button(
+                            onClick = {
+                                onDismissAlarm()
+                                viewModel.snooze()
+                                localAlarmActive = false
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(72.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary
+                            ),
+                            shape = MaterialTheme.shapes.large
+                        ) {
+                            Text(
+                                text = stringResource(R.string.main_alarm_snooze),
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Button(
+                            onClick = {
+                                onDismissAlarm()
+                                viewModel.markAllAsTakenNow()
+                                localAlarmActive = false
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(72.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error
+                            ),
+                            shape = MaterialTheme.shapes.large
+                        ) {
+                            Text(
+                                text = stringResource(R.string.main_alarm_taken),
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onError
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.height(24.dp))
                 }
 
-                Spacer(modifier = Modifier.height(if (isAlarmActive) 0.dp else 40.dp))
+                Spacer(modifier = Modifier.height(if (localAlarmActive) 0.dp else 40.dp))
 
                 Text(
                     text = currentTime,
@@ -221,7 +258,7 @@ fun MedicationReminderScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Zeit für deine Medikamente!",
+                    text = stringResource(R.string.main_time_for_medications),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium
                 )
@@ -239,9 +276,9 @@ fun MedicationReminderScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text("💊", fontSize = 48.sp)
-                            Text("Keine Medikamente vorhanden", fontSize = 16.sp)
+                            Text(stringResource(R.string.main_no_medications), fontSize = 16.sp)
                             Text(
-                                "Tippe auf ⚙️ um Medikamente hinzuzufügen",
+                                stringResource(R.string.main_add_medications_hint),
                                 fontSize = 13.sp,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
@@ -263,146 +300,15 @@ fun MedicationReminderScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Snooze button - shows current duration + counter
-                val snoozesLeft = viewModel.maxSnoozeCount - snoozeCountToday
-                // All medications already taken today? Then nothing to snooze.
                 val allTaken = medications.isNotEmpty() && medications.all { it.isChecked }
-                val snoozeButtonEnabled = medications.isNotEmpty() && !allTaken
-                val snoozeActive = snoozeButtonEnabled && viewModel.canSnooze
-                Button(
-                    onClick = {
-                        if (viewModel.canSnooze) {
-                            viewModel.snooze()
-                        } else {
-                            showSnoozeDialog = true
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                    enabled = snoozeButtonEnabled,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (snoozeActive)
-                            MaterialTheme.colorScheme.secondary
-                        else
-                            MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    when {
-                        allTaken -> Text("✓ Heute alles genommen", fontSize = 16.sp)
-                        viewModel.canSnooze -> Text(
-                            "⏰ Snooze (${viewModel.snoozeMinutes} Min)  •  noch ${snoozesLeft}x",
-                            fontSize = 16.sp
-                        )
-                        else -> Text("⏰ Snooze nicht mehr verfügbar", fontSize = 16.sp)
-                    }
-                }
-
-                // Settings link for Snooze
-                TextButton(onClick = { showSnoozeDialog = true }) {
-                    Text(
-                        "Snooze-Einstellungen",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    )
+                if (allTaken && !localAlarmActive) {
+                    Text(stringResource(R.string.main_all_taken_today), fontSize = 16.sp)
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
         }
     }
 
-    // Snooze settings dialog
-    if (showSnoozeDialog) {
-        SnoozeSettingsDialog(
-            currentMinutes = viewModel.snoozeMinutes,
-            currentMaxCount = viewModel.maxSnoozeCount,
-            snoozeCountToday = snoozeCountToday,
-            context = LocalContext.current,
-            onReset = { viewModel.resetSnoozeCountToday() },
-            onDismiss = {
-                viewModel.refreshSnoozeCount()  // Refresh counter after dialog
-                showSnoozeDialog = false
-            }
-        )
-    }
-}
-
-@Composable
-fun SnoozeSettingsDialog(
-    currentMinutes: Int,
-    currentMaxCount: Int,
-    snoozeCountToday: Int,
-    context: android.content.Context,
-    onReset: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    var selectedMinutes by remember { mutableIntStateOf(currentMinutes) }
-    var selectedMaxCount by remember { mutableIntStateOf(currentMaxCount) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("⏰ Snooze-Einstellungen") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("Snooze-Zeit:", fontWeight = FontWeight.Medium)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    SnoozeManager.SNOOZE_OPTIONS.forEach { mins ->
-                        FilterChip(
-                            selected = selectedMinutes == mins,
-                            onClick = { selectedMinutes = mins },
-                            label = { Text("${mins}m") }
-                        )
-                    }
-                }
-                Text("Maximal pro Tag:", fontWeight = FontWeight.Medium)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    SnoozeManager.MAX_COUNT_OPTIONS.forEach { count ->
-                        FilterChip(
-                            selected = selectedMaxCount == count,
-                            onClick = { selectedMaxCount = count },
-                            label = { Text("${count}x") }
-                        )
-                    }
-                }
-
-                // Today's counter + reset button
-                HorizontalDivider()
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        "Heute: ${snoozeCountToday}x von ${selectedMaxCount}x",
-                        fontSize = 13.sp,
-                        color = if (snoozeCountToday >= selectedMaxCount)
-                            MaterialTheme.colorScheme.error
-                        else
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
-                    if (snoozeCountToday > 0) {
-                        TextButton(onClick = onReset) {
-                            Text("Zurücksetzen", fontSize = 12.sp)
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            Button(onClick = {
-                SnoozeManager.setSnoozeMinutes(context, selectedMinutes)
-                SnoozeManager.setMaxSnoozeCount(context, selectedMaxCount)
-                onDismiss()
-            }) { Text("Speichern") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Abbrechen") }
-        }
-    )
 }
 
 @Composable

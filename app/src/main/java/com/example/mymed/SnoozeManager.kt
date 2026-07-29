@@ -19,39 +19,21 @@ import android.util.Log
 object SnoozeManager {
 
     // --- Constants: default values ---
-    const val DEFAULT_SNOOZE_MINUTES = 10   // Default: 10 minutes
-    const val DEFAULT_MAX_SNOOZE_COUNT = 3  // Default: max. 3x snooze per alarm session
+    const val DEFAULT_SNOOZE_MINUTES = 10
     private const val SNOOZE_ALARM_ID = 9999  // Unique ID for the snooze alarm
 
     // SharedPreferences keys
     private const val PREFS_NAME = "mymed_snooze_prefs"
-    private const val KEY_SNOOZE_MINUTES = "snooze_minutes"
-    private const val KEY_MAX_COUNT = "max_snooze_count"
-    private const val KEY_SNOOZE_COUNT = "snooze_count_session"       // Per alarm session
-    private const val KEY_CURRENT_ALARM_ID = "current_alarm_id"       // Current active alarm
+    private const val KEY_CURRENT_SNOOZE_MINUTES = "current_snooze_minutes"
 
-    // Available snooze durations (minutes) for UI selection
-    val SNOOZE_OPTIONS = listOf(5, 10, 20, 30)
-
-    // Available max-count options for UI selection
-    val MAX_COUNT_OPTIONS = listOf(1, 2, 3, 5)
+    // Available snooze durations (minutes) for UI selection while creating reminders
+    val SNOOZE_OPTIONS = listOf(5, 10, 15, 20, 30)
 
     private fun prefs(context: Context): SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    fun getSnoozeMinutes(context: Context): Int =
-        prefs(context).getInt(KEY_SNOOZE_MINUTES, DEFAULT_SNOOZE_MINUTES)
-
-    fun getMaxSnoozeCount(context: Context): Int =
-        prefs(context).getInt(KEY_MAX_COUNT, DEFAULT_MAX_SNOOZE_COUNT)
-
-    fun setSnoozeMinutes(context: Context, minutes: Int) {
-        prefs(context).edit().putInt(KEY_SNOOZE_MINUTES, minutes).apply()
-    }
-
-    fun setMaxSnoozeCount(context: Context, count: Int) {
-        prefs(context).edit().putInt(KEY_MAX_COUNT, count).apply()
-    }
+    fun getCurrentSnoozeMinutes(context: Context): Int =
+        prefs(context).getInt(KEY_CURRENT_SNOOZE_MINUTES, DEFAULT_SNOOZE_MINUTES)
 
     /**
      * Called when a NEW regular alarm fires (not a snooze alarm).
@@ -59,43 +41,19 @@ object SnoozeManager {
      *
      * @param alarmId Reminder ID that is currently firing
      */
-    fun onNewAlarmFired(context: Context, alarmId: Int) {
+    fun onNewAlarmFired(context: Context, alarmId: Int, snoozeMinutes: Int) {
         prefs(context).edit()
-            .putInt(KEY_SNOOZE_COUNT, 0)
-            .putInt(KEY_CURRENT_ALARM_ID, alarmId)
+            .putInt(KEY_CURRENT_SNOOZE_MINUTES, snoozeMinutes)
             .apply()
-        Log.d("SnoozeManager", "New alarm $alarmId - snooze counter reset")
-    }
-
-    fun getSnoozeCountToday(context: Context): Int =
-        prefs(context).getInt(KEY_SNOOZE_COUNT, 0)
-
-    fun canSnoozeToday(context: Context): Boolean =
-        getSnoozeCountToday(context) < getMaxSnoozeCount(context)
-
-    // Reset counter for the current alarm session
-    fun resetTodayCount(context: Context) {
-        prefs(context).edit().putInt(KEY_SNOOZE_COUNT, 0).apply()
-    }
-
-    private fun incrementSnoozeCount(context: Context) {
-        val current = getSnoozeCountToday(context)
-        prefs(context).edit().putInt(KEY_SNOOZE_COUNT, current + 1).apply()
+        Log.d("SnoozeManager", "New alarm $alarmId - snooze interval: $snoozeMinutes min")
     }
 
     /**
      * Executes snooze:
-     * 1) increments counter
-     * 2) schedules a new alarm in X minutes
-     *
-     * @return true if snooze succeeded, false if max count was reached
+     * Schedules a new alarm in X minutes.
      */
     fun snooze(context: Context): Boolean {
-        if (!canSnoozeToday(context)) return false
-
-        incrementSnoozeCount(context)
-
-        val snoozeMinutes = getSnoozeMinutes(context)
+        val snoozeMinutes = getCurrentSnoozeMinutes(context)
         val triggerAt = System.currentTimeMillis() + (snoozeMinutes * 60 * 1000L)
 
         // One-time alarm (no setRepeating) after X minutes
@@ -103,6 +61,7 @@ object SnoozeManager {
 
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("is_snooze", true)  // Lets AlarmReceiver know this is snooze
+            putExtra("snooze_minutes", snoozeMinutes)
         }
         val pendingIntent = PendingIntent.getBroadcast(
             context,

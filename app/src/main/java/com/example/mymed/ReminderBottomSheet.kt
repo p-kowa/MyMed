@@ -1,5 +1,6 @@
 package com.example.mymed
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,17 +17,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
-// Helper: "1,2,3,4,5" -> "Mo Di Mi Do Fr"
-fun formatDaysOfWeek(daysOfWeek: String): String {
-    val names = mapOf(1 to "Mo", 2 to "Di", 3 to "Mi", 4 to "Do", 5 to "Fr", 6 to "Sa", 7 to "So")
-    if (daysOfWeek == "1,2,3,4,5,6,7") return "Täglich"
-    if (daysOfWeek == "1,2,3,4,5") return "Mo–Fr"
-    if (daysOfWeek == "6,7") return "Wochenende"
+// Helper: "1,2,3,4,5" -> localized weekday text
+fun formatDaysOfWeek(context: Context, daysOfWeek: String): String {
+    val names = mapOf(
+        1 to context.getString(R.string.day_mon),
+        2 to context.getString(R.string.day_tue),
+        3 to context.getString(R.string.day_wed),
+        4 to context.getString(R.string.day_thu),
+        5 to context.getString(R.string.day_fri),
+        6 to context.getString(R.string.day_sat),
+        7 to context.getString(R.string.day_sun)
+    )
+    if (daysOfWeek == "1,2,3,4,5,6,7") return context.getString(R.string.days_daily)
+    if (daysOfWeek == "1,2,3,4,5") return context.getString(R.string.days_workdays)
+    if (daysOfWeek == "6,7") return context.getString(R.string.days_weekend)
     return daysOfWeek.split(",")
         .mapNotNull { it.trim().toIntOrNull() }
         .mapNotNull { names[it] }
@@ -68,7 +78,7 @@ fun ReminderBottomSheet(
         ) {
             // Title
             Text(
-                text = "⏰ Erinnerungen",
+                text = stringResource(R.string.reminder_sheet_title),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -87,7 +97,7 @@ fun ReminderBottomSheet(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        "Noch keine Erinnerungen.\nTippe auf + um eine hinzuzufügen.",
+                        stringResource(R.string.reminder_sheet_empty),
                         color = Color.Gray,
                         fontSize = 14.sp
                     )
@@ -119,7 +129,7 @@ fun ReminderBottomSheet(
             ) {
                 Icon(Icons.Default.Add, null)
                 Spacer(Modifier.width(8.dp))
-                Text("Neue Erinnerung hinzufügen")
+                Text(stringResource(R.string.reminder_add_new))
             }
         }
     }
@@ -127,13 +137,14 @@ fun ReminderBottomSheet(
     // Dialog for new reminder
     if (showAddDialog) {
         AddReminderDialog(
-            onConfirm = { hour, minute, daysOfWeek ->
+            onConfirm = { hour, minute, daysOfWeek, snoozeMinutes ->
                 viewModel.insertReminder(
                     Reminder(
                         medicationId = medicationId,
                         hour = hour,
                         minute = minute,
-                        daysOfWeek = daysOfWeek
+                        daysOfWeek = daysOfWeek,
+                        snoozeMinutes = snoozeMinutes
                     )
                 )
                 showAddDialog = false
@@ -150,6 +161,7 @@ fun ReminderItem(
     onToggleEnabled: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -174,9 +186,14 @@ fun ReminderItem(
             // Weekdays
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = formatDaysOfWeek(reminder.daysOfWeek),
+                    text = formatDaysOfWeek(context, reminder.daysOfWeek),
                     fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
+                Text(
+                    text = stringResource(R.string.reminder_snooze_info, reminder.snoozeMinutes),
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
             }
 
@@ -190,7 +207,7 @@ fun ReminderItem(
 
             // Delete
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, "Löschen", tint = Color.Red.copy(alpha = 0.7f))
+                Icon(Icons.Default.Delete, stringResource(R.string.cd_delete_reminder), tint = Color.Red.copy(alpha = 0.7f))
             }
         }
     }
@@ -200,7 +217,7 @@ fun ReminderItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddReminderDialog(
-    onConfirm: (hour: Int, minute: Int, daysOfWeek: String) -> Unit,
+    onConfirm: (hour: Int, minute: Int, daysOfWeek: String, snoozeMinutes: Int) -> Unit,
     onDismiss: () -> Unit
 ) {
     // TimePicker state (24-hour format)
@@ -211,12 +228,21 @@ fun AddReminderDialog(
     )
 
     // Weekday state: which days are selected?
-    val dayLabels = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
+    val dayLabels = listOf(
+        stringResource(R.string.day_mon),
+        stringResource(R.string.day_tue),
+        stringResource(R.string.day_wed),
+        stringResource(R.string.day_thu),
+        stringResource(R.string.day_fri),
+        stringResource(R.string.day_sat),
+        stringResource(R.string.day_sun)
+    )
     var selectedDays by remember { mutableStateOf(setOf(1, 2, 3, 4, 5, 6, 7)) }
+    var selectedSnoozeMinutes by remember { mutableIntStateOf(SnoozeManager.DEFAULT_SNOOZE_MINUTES) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Neue Erinnerung") },
+        title = { Text(stringResource(R.string.reminder_dialog_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
 
@@ -224,7 +250,7 @@ fun AddReminderDialog(
                 TimePicker(state = timePickerState)
 
                 // Select weekdays
-                Text("Wochentage:", fontWeight = FontWeight.Medium)
+                Text(stringResource(R.string.reminder_weekdays), fontWeight = FontWeight.Medium)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
@@ -243,6 +269,20 @@ fun AddReminderDialog(
                         )
                     }
                 }
+
+                Text(stringResource(R.string.reminder_snooze_interval), fontWeight = FontWeight.Medium)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    SnoozeManager.SNOOZE_OPTIONS.forEach { mins ->
+                        FilterChip(
+                            selected = selectedSnoozeMinutes == mins,
+                            onClick = { selectedSnoozeMinutes = mins },
+                            label = { Text("${mins}m") }
+                        )
+                    }
+                }
             }
         },
         confirmButton = {
@@ -250,15 +290,15 @@ fun AddReminderDialog(
                 onClick = {
                     val daysString = if (selectedDays.isEmpty()) "1,2,3,4,5,6,7"
                     else selectedDays.sorted().joinToString(",")
-                    onConfirm(timePickerState.hour, timePickerState.minute, daysString)
+                    onConfirm(timePickerState.hour, timePickerState.minute, daysString, selectedSnoozeMinutes)
                 },
                 enabled = selectedDays.isNotEmpty()
             ) {
-                Text("Hinzufügen")
+                Text(stringResource(R.string.common_add))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Abbrechen") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         }
     )
 }
