@@ -93,7 +93,6 @@ After installing on the target device:
 
 ## Possible Next Steps
 
-- History screen (what was taken, when)
 - Home screen widget
 - Multiple user profiles
 
