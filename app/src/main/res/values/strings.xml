@@ -60,6 +60,12 @@
     <string name="reminder_sheet_empty">No reminders yet.\nTap + to add one.</string>
     <string name="reminder_add_new">Add new reminder</string>
     <string name="reminder_dialog_title">New reminder</string>
+    <string name="reminder_edit_title">Edit reminder</string>
+    <string name="reminder_edit_save">Save</string>
+    <string name="reminder_click_to_edit">Tap to edit</string>
+    <string name="error_update_reminder">Error updating reminder: %1$s</string>
+    <string name="error_delete_reminder">Error deleting reminder: %1$s</string>
+    <string name="error_create_reminder">Error creating reminder: %1$s</string>
     <string name="reminder_weekdays">Weekdays:</string>
     <string name="reminder_snooze_interval">Snooze interval:</string>
     <string name="reminder_snooze_info">Snooze: %1$d min</string>

@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
     implementation(libs.mlkit.text.recognition)
+    implementation(libs.timber)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
     testImplementation(libs.junit)

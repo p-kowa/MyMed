@@ -65,6 +65,10 @@ fun ReminderBottomSheet(
 
     // Controls "new reminder" dialog visibility
     var showAddDialog by remember { mutableStateOf(false) }
+    // Controls "edit reminder" dialog visibility
+    var editingReminder by remember { mutableStateOf<Reminder?>(null) }
+    // Error message
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -90,6 +94,32 @@ fun ReminderBottomSheet(
 
             Spacer(Modifier.height(16.dp))
 
+            // Error message display
+            if (errorMessage != null) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = errorMessage ?: "",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = { errorMessage = null }, modifier = Modifier.width(32.dp)) {
+                            Text("✕", fontSize = 18.sp, color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+            }
+
             if (reminders.isEmpty()) {
                 // Empty state
                 Box(
@@ -111,10 +141,21 @@ fun ReminderBottomSheet(
                     items(reminders) { reminder ->
                         ReminderItem(
                             reminder = reminder,
+                            onEdit = { editingReminder = it },
                             onToggleEnabled = {
-                                viewModel.updateReminder(reminder.copy(enabled = !reminder.enabled))
+                                try {
+                                    viewModel.updateReminder(reminder.copy(enabled = !reminder.enabled))
+                                } catch (e: Exception) {
+                                    errorMessage = context.getString(R.string.error_update_reminder, e.message ?: "Unknown error")
+                                }
                             },
-                            onDelete = { viewModel.deleteReminder(reminder) }
+                            onDelete = { 
+                                try {
+                                    viewModel.deleteReminder(reminder) 
+                                } catch (e: Exception) {
+                                    errorMessage = context.getString(R.string.error_delete_reminder, e.message ?: "Unknown error")
+                                }
+                            }
                         )
                     }
                 }
@@ -138,32 +179,57 @@ fun ReminderBottomSheet(
     if (showAddDialog) {
         AddReminderDialog(
             onConfirm = { hour, minute, daysOfWeek, snoozeMinutes ->
-                viewModel.insertReminder(
-                    Reminder(
-                        medicationId = medicationId,
-                        hour = hour,
-                        minute = minute,
-                        daysOfWeek = daysOfWeek,
-                        snoozeMinutes = snoozeMinutes
+                try {
+                    viewModel.insertReminder(
+                        Reminder(
+                            medicationId = medicationId,
+                            hour = hour,
+                            minute = minute,
+                            daysOfWeek = daysOfWeek,
+                            snoozeMinutes = snoozeMinutes
+                        )
                     )
-                )
-                showAddDialog = false
+                    showAddDialog = false
+                    errorMessage = null
+                } catch (e: Exception) {
+                    errorMessage = context.getString(R.string.error_create_reminder, e.message ?: "Unknown error")
+                }
             },
             onDismiss = { showAddDialog = false }
         )
     }
+
+    // Dialog for editing reminder
+    if (editingReminder != null) {
+        EditReminderDialog(
+            reminder = editingReminder!!,
+            onConfirm = { updatedReminder ->
+                try {
+                    viewModel.updateReminder(updatedReminder)
+                    editingReminder = null
+                    errorMessage = null
+                } catch (e: Exception) {
+                    errorMessage = context.getString(R.string.error_update_reminder, e.message ?: "Unknown error")
+                }
+            },
+            onDismiss = { editingReminder = null }
+        )
+    }
 }
 
-// Single reminder row
+// Single reminder row - clickable for edit
 @Composable
 fun ReminderItem(
     reminder: Reminder,
+    onEdit: (Reminder) -> Unit = {},
     onToggleEnabled: () -> Unit,
     onDelete: () -> Unit
 ) {
     val context = LocalContext.current
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onEdit(reminder) },
         colors = CardDefaults.cardColors(
             containerColor = if (reminder.enabled)
                 MaterialTheme.colorScheme.primaryContainer
@@ -200,7 +266,8 @@ fun ReminderItem(
             // Active/inactive toggle
             Switch(
                 checked = reminder.enabled,
-                onCheckedChange = { onToggleEnabled() }
+                onCheckedChange = { onToggleEnabled() },
+                modifier = Modifier.clickable(enabled = false) {}  // Prevent card click when toggling
             )
 
             Spacer(Modifier.width(4.dp))
@@ -295,6 +362,109 @@ fun AddReminderDialog(
                 enabled = selectedDays.isNotEmpty()
             ) {
                 Text(stringResource(R.string.common_add))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+        }
+    )
+}
+
+// Dialog: edit existing reminder
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditReminderDialog(
+    reminder: Reminder,
+    onConfirm: (Reminder) -> Unit,
+    onDismiss: () -> Unit
+) {
+    // TimePicker state initialized with current reminder time
+    val timePickerState = rememberTimePickerState(
+        initialHour = reminder.hour,
+        initialMinute = reminder.minute,
+        is24Hour = true
+    )
+
+    // Weekday state: which days are selected?
+    val dayLabels = listOf(
+        stringResource(R.string.day_mon),
+        stringResource(R.string.day_tue),
+        stringResource(R.string.day_wed),
+        stringResource(R.string.day_thu),
+        stringResource(R.string.day_fri),
+        stringResource(R.string.day_sat),
+        stringResource(R.string.day_sun)
+    )
+    
+    val initialDays = reminder.daysOfWeek.split(",")
+        .mapNotNull { it.trim().toIntOrNull() }
+        .toSet()
+    
+    var selectedDays by remember { mutableStateOf(initialDays) }
+    var selectedSnoozeMinutes by remember { mutableIntStateOf(reminder.snoozeMinutes) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.reminder_edit_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+
+                // TimePicker (Material3)
+                TimePicker(state = timePickerState)
+
+                // Select weekdays
+                Text(stringResource(R.string.reminder_weekdays), fontWeight = FontWeight.Medium)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    dayLabels.forEachIndexed { index, label ->
+                        val dayNum = index + 1
+                        DayToggleButton(
+                            label = label,
+                            selected = dayNum in selectedDays,
+                            onClick = {
+                                selectedDays = if (dayNum in selectedDays)
+                                    selectedDays - dayNum
+                                else
+                                    selectedDays + dayNum
+                            }
+                        )
+                    }
+                }
+
+                Text(stringResource(R.string.reminder_snooze_interval), fontWeight = FontWeight.Medium)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    SnoozeManager.SNOOZE_OPTIONS.forEach { mins ->
+                        FilterChip(
+                            selected = selectedSnoozeMinutes == mins,
+                            onClick = { selectedSnoozeMinutes = mins },
+                            label = { Text("${mins}m") }
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val daysString = if (selectedDays.isEmpty()) "1,2,3,4,5,6,7"
+                    else selectedDays.sorted().joinToString(",")
+                    onConfirm(
+                        reminder.copy(
+                            hour = timePickerState.hour,
+                            minute = timePickerState.minute,
+                            daysOfWeek = daysString,
+                            snoozeMinutes = selectedSnoozeMinutes
+                        )
+                    )
+                },
+                enabled = selectedDays.isNotEmpty()
+            ) {
+                Text(stringResource(R.string.reminder_edit_save))
             }
         },
         dismissButton = {

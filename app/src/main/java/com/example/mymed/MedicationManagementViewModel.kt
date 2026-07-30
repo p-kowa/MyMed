@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class MedicationManagementViewModel(
     application: Application,
@@ -17,37 +18,97 @@ class MedicationManagementViewModel(
     val medications: StateFlow<List<MyMedication>> = dao.getAllMedications()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // --- Medication CRUD ---
-    fun insert(medication: MyMedication) { viewModelScope.launch { dao.insert(medication) } }
-    fun update(medication: MyMedication) { viewModelScope.launch { dao.update(medication) } }
-    fun delete(medication: MyMedication) {
+    // --- Medication CRUD with error handling ---
+    fun insert(medication: MyMedication) {
         viewModelScope.launch {
-            // Delete this medication's reminders first (avoid orphans)
-            dao.deleteRemindersForMedication(medication.id)
-            dao.delete(medication)
-            rescheduleAlarms()
+            try {
+                dao.insert(medication)
+                Timber.d("Medication inserted: ${medication.name}")
+            } catch (e: Exception) {
+                Timber.e(e, "Error inserting medication")
+            }
         }
     }
-    suspend fun getById(id: Int): MyMedication? = dao.getById(id)
 
-    // --- Reminder CRUD ---
+    fun update(medication: MyMedication) {
+        viewModelScope.launch {
+            try {
+                dao.update(medication)
+                Timber.d("Medication updated: ${medication.name}")
+            } catch (e: Exception) {
+                Timber.e(e, "Error updating medication")
+            }
+        }
+    }
+
+    fun delete(medication: MyMedication) {
+        viewModelScope.launch {
+            try {
+                // Delete this medication's reminders first (avoid orphans)
+                dao.deleteRemindersForMedication(medication.id)
+                dao.delete(medication)
+                rescheduleAlarms()
+                Timber.d("Medication deleted: ${medication.name}")
+            } catch (e: Exception) {
+                Timber.e(e, "Error deleting medication")
+            }
+        }
+    }
+
+    suspend fun getById(id: Int): MyMedication? = try {
+        dao.getById(id)
+    } catch (e: Exception) {
+        Timber.e(e, "Error fetching medication by id: $id")
+        null
+    }
+
+    // --- Reminder CRUD with error handling ---
     fun getRemindersForMedication(medicationId: Int) =
         dao.getRemindersForMedication(medicationId)
 
     fun insertReminder(reminder: Reminder) {
-        viewModelScope.launch { dao.insertReminder(reminder); rescheduleAlarms() }
+        viewModelScope.launch {
+            try {
+                dao.insertReminder(reminder)
+                rescheduleAlarms()
+                Timber.d("Reminder inserted for medication ${reminder.medicationId} at ${reminder.hour}:${String.format("%02d", reminder.minute)}")
+            } catch (e: Exception) {
+                Timber.e(e, "Error inserting reminder")
+            }
+        }
     }
 
     fun updateReminder(reminder: Reminder) {
-        viewModelScope.launch { dao.updateReminder(reminder); rescheduleAlarms() }
+        viewModelScope.launch {
+            try {
+                dao.updateReminder(reminder)
+                rescheduleAlarms()
+                Timber.d("Reminder updated for medication ${reminder.medicationId} at ${reminder.hour}:${String.format("%02d", reminder.minute)}")
+            } catch (e: Exception) {
+                Timber.e(e, "Error updating reminder")
+            }
+        }
     }
 
     fun deleteReminder(reminder: Reminder) {
-        viewModelScope.launch { dao.deleteReminder(reminder); rescheduleAlarms() }
+        viewModelScope.launch {
+            try {
+                dao.deleteReminder(reminder)
+                rescheduleAlarms()
+                Timber.d("Reminder deleted for medication ${reminder.medicationId}")
+            } catch (e: Exception) {
+                Timber.e(e, "Error deleting reminder")
+            }
+        }
     }
 
     private suspend fun rescheduleAlarms() {
-        AlarmScheduler.rescheduleFromDb(getApplication())
+        try {
+            AlarmScheduler.rescheduleFromDb(getApplication())
+            Timber.d("Alarms rescheduled")
+        } catch (e: Exception) {
+            Timber.e(e, "Error rescheduling alarms")
+        }
     }
 
     companion object {

@@ -60,6 +60,12 @@
     <string name="reminder_sheet_empty">Noch keine Erinnerungen.\nTippe auf + um eine hinzuzufügen.</string>
     <string name="reminder_add_new">Neue Erinnerung hinzufügen</string>
     <string name="reminder_dialog_title">Neue Erinnerung</string>
+    <string name="reminder_edit_title">Erinnerung bearbeiten</string>
+    <string name="reminder_edit_save">Speichern</string>
+    <string name="reminder_click_to_edit">Tippe zum Bearbeiten</string>
+    <string name="error_update_reminder">Fehler beim Aktualisieren: %1$s</string>
+    <string name="error_delete_reminder">Fehler beim Löschen: %1$s</string>
+    <string name="error_create_reminder">Fehler beim Erstellen: %1$s</string>
     <string name="reminder_weekdays">Wochentage:</string>
     <string name="reminder_snooze_interval">Snooze-Intervall:</string>
     <string name="reminder_snooze_info">Snooze: %1$d Min</string>
