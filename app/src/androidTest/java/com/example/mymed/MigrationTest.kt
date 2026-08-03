@@ -61,5 +61,30 @@ class MigrationTest {
             }
         }
     }
+
+    @Test
+    fun migrate3To4_preservesExistingReminder_andAddsTakenAtColumn() {
+        helper.createDatabase(testDb, 3).apply {
+            execSQL(
+                "INSERT INTO medications (id, name, dosage, notes, active) VALUES (1, 'Aspirin', '100mg', NULL, 1)"
+            )
+            execSQL(
+                "INSERT INTO reminders (id, medicationId, hour, minute, snoozeMinutes, enabled, daysOfWeek) " +
+                    "VALUES (1, 1, 10, 0, 15, 1, '1,3')"
+            )
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(testDb, 4, true, AppDatabase.MIGRATION_3_4)
+
+        db.query("SELECT hour, minute, snoozeMinutes, daysOfWeek, takenAt FROM reminders WHERE id = 1").use { cursor ->
+            assert(cursor.moveToFirst()) { "Reminder row was lost during migration to v4!" }
+            assert(cursor.getInt(0) == 10)
+            assert(cursor.getInt(1) == 0)
+            assert(cursor.getInt(2) == 15)
+            assert(cursor.getString(3) == "1,3")
+            assert(cursor.isNull(4)) { "Expected takenAt to be NULL after migration" }
+        }
+    }
 }
 

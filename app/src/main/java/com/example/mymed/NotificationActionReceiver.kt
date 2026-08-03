@@ -12,8 +12,8 @@ import kotlinx.coroutines.launch
  * NotificationActionReceiver
  *
  * Handles taps on notification action buttons:
- * - "✅ All taken" -> mark all medications as taken
- * - "⏰ Snooze"        -> schedule snooze alarm, close notification
+ * - "✅ Taken"  -> mark only the CURRENT ringing reminder(s) as taken
+ * - "⏰ Snooze" -> schedule snooze alarm, close notification
  *
  * Note: BroadcastReceiver has a very short lifetime.
  * DB operations (suspend functions) use goAsync() + CoroutineScope.
@@ -23,9 +23,9 @@ class NotificationActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
 
-            // ✅ "All taken" button tapped
+            // ✅ Current reminder(s) taken
             AlarmNotificationManager.ACTION_ALL_TAKEN -> {
-                Log.d("NotificationAction", "All medications marked as taken")
+                Log.d("NotificationAction", "Current reminder(s) marked as taken")
 
                 // Stop alarm sound + vibration immediately
                 AlarmSoundManager.stop(context)
@@ -36,12 +36,13 @@ class NotificationActionReceiver : BroadcastReceiver() {
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
                         val dao = AppDatabase.getInstance(context).medicationDao()
-                        val activeMeds = dao.getAllActiveMedications()
+                        val ringingIds = RingingMedicationsTracker.getCurrentReminderIds(context)
                         val now = System.currentTimeMillis()
-                        activeMeds.forEach { med ->
-                            dao.insertHistory(MedicationHistory(medicationId = med.id, takenAt = now))
+                        ringingIds.forEach { reminderId ->
+                            dao.markReminderTaken(reminderId, now)
                         }
-                        Log.d("NotificationAction", "${activeMeds.size} medication(s) marked as taken")
+                        RingingMedicationsTracker.clear(context)
+                        Log.d("NotificationAction", "${ringingIds.size} reminder(s) marked as taken")
                     } catch (e: Exception) {
                         Log.e("NotificationAction", "Error: ${e.message}")
                     } finally {

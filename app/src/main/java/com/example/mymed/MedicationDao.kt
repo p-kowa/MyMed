@@ -48,6 +48,9 @@ interface MedicationDao {
     @Query("SELECT * FROM reminders WHERE enabled = 1")
     suspend fun getAllEnabledReminders(): List<Reminder>
 
+    @Query("SELECT * FROM reminders WHERE id = :reminderId LIMIT 1")
+    suspend fun getReminderById(reminderId: Int): Reminder?
+
     @Insert
     suspend fun insertReminder(reminder: Reminder): Long
 
@@ -56,6 +59,12 @@ interface MedicationDao {
 
     @Delete
     suspend fun deleteReminder(reminder: Reminder)
+
+    @Query("UPDATE reminders SET takenAt = :takenAt WHERE id = :reminderId")
+    suspend fun markReminderTaken(reminderId: Int, takenAt: Long)
+
+    @Query("UPDATE reminders SET takenAt = NULL WHERE id = :reminderId")
+    suspend fun resetReminderTaken(reminderId: Int)
 
     // Delete all reminders of a medication (when deleting the medication)
     @Query("DELETE FROM reminders WHERE medicationId = :medicationId")

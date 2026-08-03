@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [MyMedication::class, Reminder::class, MedicationHistory::class],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -32,6 +32,15 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // v3 -> v4: store taken-state directly on each reminder.
+        // Nullable timestamp means "not taken"; same-day comparison means
+        // entries reset automatically after midnight without a background job.
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE reminders ADD COLUMN takenAt INTEGER")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 Room.databaseBuilder(
@@ -40,7 +49,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "mymed.db"
                 )
                     // Real migration: preserves all user data across version 2 -> 3.
-                    .addMigrations(MIGRATION_2_3)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
                     // Safety net ONLY for a hypothetical pre-repo version 1 DB we have
                     // no schema record of. Any known version (2, 3, ...) uses the
                     // explicit migrations above and never loses data.

@@ -12,7 +12,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -110,6 +113,7 @@ fun AppNavigation(
         composable("reminder") {
             MedicationReminderScreen(
                 onNavigateToMedications = { navController.navigate("medications") },
+                onNavigateToAlarmSettings = { navController.navigate("alarm_settings") },
                 isAlarmActive = isAlarmActive,
                 onDismissAlarm = onDismissAlarm
             )
@@ -131,6 +135,11 @@ fun AppNavigation(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
+        composable("alarm_settings") {
+            AlarmSettingsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
     }
 }
 
@@ -138,6 +147,7 @@ fun AppNavigation(
 @Composable
 fun MedicationReminderScreen(
     onNavigateToMedications: () -> Unit = {},
+    onNavigateToAlarmSettings: () -> Unit = {},
     isAlarmActive: Boolean = false,
     onDismissAlarm: () -> Unit = {}
 ) {
@@ -155,6 +165,7 @@ fun MedicationReminderScreen(
     val medications by viewModel.medications.collectAsState()
     var currentTime by remember { mutableStateOf(getCurrentTime()) }
     var localAlarmActive by remember { mutableStateOf(isAlarmActive) }
+    var showSettingsSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(isAlarmActive) {
         localAlarmActive = isAlarmActive
@@ -180,8 +191,8 @@ fun MedicationReminderScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.main_title)) },
                 actions = {
-                    IconButton(onClick = onNavigateToMedications) {
-                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.cd_manage_medications))
+                    IconButton(onClick = { showSettingsSheet = true }) {
+                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.cd_open_settings))
                     }
                 }
             )
@@ -224,7 +235,7 @@ fun MedicationReminderScreen(
                         Button(
                             onClick = {
                                 onDismissAlarm()
-                                viewModel.markAllAsTakenNow()
+                                viewModel.markCurrentAlarmTaken()
                                 localAlarmActive = false
                             },
                             modifier = Modifier
@@ -309,6 +320,58 @@ fun MedicationReminderScreen(
         }
     }
 
+    if (showSettingsSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showSettingsSheet = false }
+        ) {
+            Text(
+                text = stringResource(R.string.settings_sheet_title),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(horizontal = 24.dp)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_menu_medications_title)) },
+                supportingContent = { Text(stringResource(R.string.settings_menu_medications_subtitle)) },
+                leadingContent = {
+                    Icon(
+                        Icons.Default.Medication,
+                        contentDescription = null
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        showSettingsSheet = false
+                        onNavigateToMedications()
+                    },
+                colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface)
+            )
+
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_menu_alarm_title)) },
+                supportingContent = { Text(stringResource(R.string.settings_menu_alarm_subtitle)) },
+                leadingContent = {
+                    Icon(
+                        Icons.Default.Alarm,
+                        contentDescription = null
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        showSettingsSheet = false
+                        onNavigateToAlarmSettings()
+                    },
+                colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface)
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+
 }
 
 @Composable
@@ -360,19 +423,19 @@ fun MedicationItem(
                 }
             }
 
-            // Alarm times (right) - strikethrough when taken
+            // Today's reminder times (right) - each time has its own taken-state
             if (item.reminderTimes.isNotEmpty()) {
                 Column(horizontalAlignment = Alignment.End) {
-                    item.reminderTimes.forEach { time ->
+                    item.reminderTimes.forEach { reminderTime ->
                         Text(
-                            text = time,
+                            text = reminderTime.time,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
-                            color = if (item.isChecked)
+                            color = if (reminderTime.isTakenToday)
                                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                             else
                                 MaterialTheme.colorScheme.primary,
-                            textDecoration = if (item.isChecked)
+                            textDecoration = if (reminderTime.isTakenToday)
                                 androidx.compose.ui.text.style.TextDecoration.LineThrough
                             else null
                         )

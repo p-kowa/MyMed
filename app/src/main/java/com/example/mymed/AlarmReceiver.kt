@@ -43,6 +43,15 @@ class AlarmReceiver : BroadcastReceiver() {
                     snoozeMinutes
                 )
             }
+
+            // Remember which reminder is currently ringing so that pressing
+            // "Taken" only marks THIS reminder as taken.
+            RingingMedicationsTracker.onRegularAlarmFired(context, reminderId)
+        } else {
+            RingingMedicationsTracker.restoreSerializedReminderIds(
+                context,
+                intent.getStringExtra("ringing_reminder_ids")
+            )
         }
 
         // Ensure service is running

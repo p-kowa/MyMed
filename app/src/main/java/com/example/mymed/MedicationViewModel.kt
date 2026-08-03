@@ -10,23 +10,33 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.Calendar
 
-// Wrapper: medication from DB + whether it was taken TODAY + its reminder times
+data class ReminderTimeItem(
+    val reminderId: Int,
+    val time: String,
+    val isTakenToday: Boolean
+)
+
+// Wrapper: active medication + today's relevant reminder rows + whether all of
+// today's reminder rows are already taken.
 data class MedicationCheckItem(
     val medication: MyMedication,
-    val isChecked: Boolean = false,
-    val reminders: List<Reminder> = emptyList()  // New: reminder times for this medication
+    val reminders: List<Reminder> = emptyList()
 ) {
     val id: Int get() = medication.id
     val name: String get() = medication.name
     val dosage: String? get() = medication.dosage
+    val isChecked: Boolean get() = reminders.isNotEmpty() && reminders.all { it.isTakenToday() }
 
-    // Formatted time list for the UI: ["07:00", "19:00"]
-    val reminderTimes: List<String> get() = reminders
-        .filter { it.enabled }
+    val reminderTimes: List<ReminderTimeItem> get() = reminders
         .sortedWith(compareBy({ it.hour }, { it.minute }))
-        .map { "%02d:%02d".format(it.hour, it.minute) }
+        .map {
+            ReminderTimeItem(
+                reminderId = it.id,
+                time = "%02d:%02d".format(it.hour, it.minute),
+                isTakenToday = it.isTakenToday()
+            )
+        }
 }
 
 class MedicationViewModel(
@@ -34,28 +44,25 @@ class MedicationViewModel(
     private val app: Application
 ) : AndroidViewModel(app) {
 
-    // Calculates midnight for today (start of day)
-    private fun startOfToday(): Long {
-        return Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-    }
-
-    // Combines: active meds + taken-today state + reminder times
+    // Combines: active meds + today's relevant reminder times.
+    // A medication is only shown if at least one enabled reminder is scheduled
+    // for TODAY. Each reminder row carries its own taken/not-taken state.
     val medications: StateFlow<List<MedicationCheckItem>> = combine(
         dao.getAllMedications().map { list -> list.filter { it.active } },
-        dao.getTakenTodayIds(startOfToday()),
-        dao.getAllReminders()          // all reminders from DB
-    ) { activeMeds, takenTodayIds, allReminders ->
-        activeMeds.map { med ->
-            MedicationCheckItem(
-                medication = med,
-                isChecked = takenTodayIds.contains(med.id),
-                reminders = allReminders.filter { it.medicationId == med.id }
-            )
+        dao.getAllReminders()
+    ) { activeMeds, allReminders ->
+        activeMeds.mapNotNull { med ->
+            val todaysReminders = allReminders
+                .filter { it.medicationId == med.id && it.enabled && it.isScheduledForToday() }
+
+            if (todaysReminders.isEmpty()) {
+                null
+            } else {
+                MedicationCheckItem(
+                    medication = med,
+                    reminders = todaysReminders
+                )
+            }
         }
     }.stateIn(
         scope = viewModelScope,
@@ -78,20 +85,20 @@ class MedicationViewModel(
 
     fun toggleMedication(id: Int) {
         viewModelScope.launch {
-            val alreadyTaken = medications.value.find { it.id == id }?.isChecked ?: false
-            if (alreadyTaken) {
-                // Delete today's history entry (uncheck)
-                dao.deleteTodayEntry(id, startOfToday())
+            val item = medications.value.find { it.id == id } ?: return@launch
+            val now = System.currentTimeMillis()
+
+            if (item.isChecked) {
+                item.reminders.forEach { reminder ->
+                    dao.resetReminderTaken(reminder.id)
+                }
             } else {
-                // Insert new history entry (check)
-                dao.insertHistory(
-                    MedicationHistory(
-                        medicationId = id,
-                        takenAt = System.currentTimeMillis()
-                    )
-                )
-                // If this makes ALL medications taken:
-                // cancel pending snooze alarm (nothing left to remind)
+                item.reminders
+                    .filterNot { it.isTakenToday(now) }
+                    .forEach { reminder ->
+                        dao.markReminderTaken(reminder.id, now)
+                    }
+
                 val nowAllTaken = medications.value.all {
                     it.id == id || it.isChecked
                 }
@@ -103,34 +110,29 @@ class MedicationViewModel(
     }
 
     fun snooze() {
-        // 1. Schedule alarm (handled by SnoozeManager)
         SnoozeManager.snooze(app)
-
-        // 2. Reset checkboxes (delete today's history)
-        viewModelScope.launch {
-            medications.value.forEach { item ->
-                dao.deleteTodayEntry(item.id, startOfToday())
-            }
-        }
     }
 
-    fun markAllAsTakenNow() {
+    fun markCurrentAlarmTaken() {
         viewModelScope.launch {
+            val ringingIds = RingingMedicationsTracker.getCurrentReminderIds(app)
+            if (ringingIds.isEmpty()) return@launch
+
             val now = System.currentTimeMillis()
-            medications.value.forEach { item ->
-                if (!item.isChecked) {
-                    dao.insertHistory(MedicationHistory(medicationId = item.id, takenAt = now))
-                }
+            ringingIds.forEach { reminderId ->
+                dao.markReminderTaken(reminderId, now)
             }
+            RingingMedicationsTracker.clear(app)
             SnoozeManager.cancelSnooze(app)
         }
     }
 
     fun resetReminder() {
-        // Reset: delete all today's entries
         viewModelScope.launch {
             medications.value.forEach { item ->
-                dao.deleteTodayEntry(item.id, startOfToday())
+                item.reminders.forEach { reminder ->
+                    dao.resetReminderTaken(reminder.id)
+                }
             }
         }
     }

@@ -2,6 +2,7 @@
     <string name="app_name">MyMed</string>
     <string name="main_title">MyMed</string>
     <string name="cd_manage_medications">Zarządzaj lekami</string>
+    <string name="cd_open_settings">Otwórz ustawienia</string>
     <string name="main_time_for_medications">Czas na twoje leki!</string>
     <string name="main_no_medications">Brak leków</string>
     <string name="main_add_medications_hint">Naciśnij ⚙️, aby dodać leki</string>
@@ -30,6 +31,25 @@
     <string name="list_empty_subtitle">Naciśnij +, aby dodać</string>
     <string name="status_active">Aktywny</string>
     <string name="status_inactive">Nieaktywny</string>
+
+    <string name="settings_sheet_title">Ustawienia</string>
+    <string name="settings_menu_medications_title">Leki i przypomnienia</string>
+    <string name="settings_menu_medications_subtitle">Twórz, edytuj i porządkuj wpisy</string>
+    <string name="settings_menu_alarm_title">Ustawienia alarmu</string>
+    <string name="settings_menu_alarm_subtitle">Dźwięk, wibracje i zachowanie alarmu</string>
+
+    <string name="alarm_settings_title">Ustawienia alarmu</string>
+    <string name="alarm_settings_sound_title">Dźwięk alarmu</string>
+    <string name="alarm_settings_sound_body">Wybierz jeden globalny dźwięk alarmu dla wszystkich przypomnień w MyMed.</string>
+    <string name="alarm_settings_current_tone_label">Aktualny dźwięk</string>
+    <string name="alarm_settings_choose_button">Wybierz dźwięk alarmu</string>
+    <string name="alarm_settings_reset_button">Użyj domyślnego systemowego</string>
+    <string name="alarm_settings_system_default">Domyślny systemowy</string>
+    <string name="alarm_settings_system_default_with_name">Domyślny systemowy (%1$s)</string>
+    <string name="alarm_settings_custom_tone">Własny dźwięk alarmu</string>
+    <string name="alarm_settings_picker_unavailable">Na tym urządzeniu nie ma dostępnego wyboru dźwięku.</string>
+    <string name="alarm_settings_behavior_title">Aktualne działanie</string>
+    <string name="alarm_settings_behavior_body">Wybrany dźwięk jest używany globalnie dla każdego alarmu. Dźwięk i wibracje uruchamiają się razem. Czas drzemki nadal ustawia się osobno dla każdego przypomnienia.</string>
 
     <string name="detail_title_edit">Edytuj lek</string>
     <string name="detail_title_new">Nowy lek</string>
@@ -87,7 +107,7 @@
     <string name="alarm_notif_title">💊 Czas na twoje leki!</string>
     <string name="alarm_notif_text">Naciśnij, aby otworzyć listę</string>
     <string name="alarm_notif_big_text">Czas przyjąć leki.\nSprawdź listę.</string>
-    <string name="alarm_action_all_taken">✅ Wszystko przyjęte</string>
+    <string name="alarm_action_all_taken">✅ Przyjęte</string>
     <string name="alarm_action_snooze">⏰ Drzemka %1$dmin</string>
 
     <string name="service_channel_name">Przypomnienia o lekach</string>

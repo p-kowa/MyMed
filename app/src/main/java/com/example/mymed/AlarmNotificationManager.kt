@@ -6,11 +6,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
-import android.media.RingtoneManager
 import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
 import androidx.core.app.NotificationCompat
 
 /**
@@ -26,7 +22,17 @@ import androidx.core.app.NotificationCompat
 object AlarmNotificationManager {
 
     const val ALARM_NOTIFICATION_ID = 2001
-    const val ALARM_CHANNEL_ID = "medication_alarm_channel"
+
+    // IMPORTANT: Once a NotificationChannel is created with a sound, that
+    // sound can become "sticky" on some OEM skins (observed on Samsung/One UI):
+    // deleting and recreating the channel with the SAME id does not reliably
+    // clear the old sound, causing it to play together with the tone we start
+    // manually in AlarmSoundManager (2 tones at once).
+    // Fix: use a channel id that was never associated with any sound, and
+    // never give it one. The actual alarm tone is always played exclusively
+    // by AlarmSoundManager, so this channel must stay silent forever.
+    const val ALARM_CHANNEL_ID = "medication_alarm_channel_silent_v2"
+    private const val LEGACY_ALARM_CHANNEL_ID = "medication_alarm_channel"
 
     // Action strings: unique names for button actions
     const val ACTION_ALL_TAKEN = "com.example.mymed.ACTION_ALL_TAKEN"
@@ -40,7 +46,16 @@ object AlarmNotificationManager {
      */
     fun createAlarmChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            val manager = context.getSystemService(NotificationManager::class.java)
+
+            // Remove the old channel once; it may still carry a legacy sound
+            // setting on some devices. We don't reuse its id.
+            manager.deleteNotificationChannel(LEGACY_ALARM_CHANNEL_ID)
+
+            // Channel already exists with correct (silent) settings -> nothing to do.
+            // We intentionally do NOT delete+recreate ALARM_CHANNEL_ID on every call,
+            // since this channel is only ever created once, silent, and never changed.
+            if (manager.getNotificationChannel(ALARM_CHANNEL_ID) != null) return
 
             val audioAttributes = AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_ALARM)
@@ -53,14 +68,12 @@ object AlarmNotificationManager {
                 NotificationManager.IMPORTANCE_HIGH  // HIGH = heads-up + sound
             ).apply {
                 description = context.getString(R.string.alarm_channel_desc)
-                setSound(alarmSound, audioAttributes)
-                enableVibration(true)
-                vibrationPattern = longArrayOf(0, 500, 200, 500, 200, 500)
+                setSound(null, audioAttributes)
+                enableVibration(false)
                 setShowBadge(true)
                 lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
             }
 
-            val manager = context.getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
         }
     }
@@ -124,9 +137,6 @@ object AlarmNotificationManager {
             .setFullScreenIntent(fullScreenIntent, true)  // Full-screen like an alarm
             .setAutoCancel(false)  // Stays until user reacts
             .setOngoing(false)     // Can be dismissed by swipe
-            // Alarm sound (from channel, repeated for older Android versions)
-            .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM))
-            .setVibrate(longArrayOf(0, 500, 200, 500, 200, 500))
             // Action buttons
             .addAction(
                 android.R.drawable.ic_menu_close_clear_cancel,
@@ -147,9 +157,6 @@ object AlarmNotificationManager {
 
         val manager = context.getSystemService(NotificationManager::class.java)
         manager.notify(ALARM_NOTIFICATION_ID, notification)
-
-        // Trigger additional vibration (if channel vibration is insufficient)
-        vibrate(context)
     }
 
     /**
@@ -160,27 +167,5 @@ object AlarmNotificationManager {
         manager.cancel(ALARM_NOTIFICATION_ID)
     }
 
-    /**
-     * Triggers vibration.
-     * Pattern: 500ms on, 200ms off, 500ms on, 200ms off, 500ms on.
-     */
-    private fun vibrate(context: Context) {
-        val pattern = longArrayOf(0, 500, 200, 500, 200, 500)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val vibratorManager = context.getSystemService(VibratorManager::class.java)
-            val vibrator = vibratorManager.defaultVibrator
-            vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
-        } else {
-            @Suppress("DEPRECATION")
-            val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
-            } else {
-                @Suppress("DEPRECATION")
-                vibrator.vibrate(pattern, -1)
-            }
-        }
-    }
 }
 

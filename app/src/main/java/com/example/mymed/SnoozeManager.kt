@@ -55,6 +55,7 @@ object SnoozeManager {
     fun snooze(context: Context): Boolean {
         val snoozeMinutes = getCurrentSnoozeMinutes(context)
         val triggerAt = System.currentTimeMillis() + (snoozeMinutes * 60 * 1000L)
+        val ringingIds = RingingMedicationsTracker.serializeCurrentReminderIds(context)
 
         // One-time alarm (no setRepeating) after X minutes
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -62,6 +63,7 @@ object SnoozeManager {
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("is_snooze", true)  // Lets AlarmReceiver know this is snooze
             putExtra("snooze_minutes", snoozeMinutes)
+            putExtra("ringing_reminder_ids", ringingIds)
         }
         val pendingIntent = PendingIntent.getBroadcast(
             context,

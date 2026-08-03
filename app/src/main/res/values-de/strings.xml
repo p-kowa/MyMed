@@ -2,6 +2,7 @@
     <string name="app_name">MyMed</string>
     <string name="main_title">MyMed</string>
     <string name="cd_manage_medications">Medikamente verwalten</string>
+    <string name="cd_open_settings">Einstellungen öffnen</string>
     <string name="main_time_for_medications">Zeit für deine Medikamente!</string>
     <string name="main_no_medications">Keine Medikamente vorhanden</string>
     <string name="main_add_medications_hint">Tippe auf ⚙️ um Medikamente hinzuzufügen</string>
@@ -30,6 +31,25 @@
     <string name="list_empty_subtitle">Tippe auf + um eines hinzuzufügen</string>
     <string name="status_active">Aktiv</string>
     <string name="status_inactive">Inaktiv</string>
+
+    <string name="settings_sheet_title">Einstellungen</string>
+    <string name="settings_menu_medications_title">Medikamente &amp; Erinnerungen</string>
+    <string name="settings_menu_medications_subtitle">Einträge anlegen, bearbeiten und verwalten</string>
+    <string name="settings_menu_alarm_title">Alarm-Einstellungen</string>
+    <string name="settings_menu_alarm_subtitle">Ton, Vibration und Alarmverhalten</string>
+
+    <string name="alarm_settings_title">Alarm-Einstellungen</string>
+    <string name="alarm_settings_sound_title">Alarmton</string>
+    <string name="alarm_settings_sound_body">Wähle einen globalen Alarmton für alle Erinnerungen in MyMed.</string>
+    <string name="alarm_settings_current_tone_label">Aktueller Ton</string>
+    <string name="alarm_settings_choose_button">Alarmton auswählen</string>
+    <string name="alarm_settings_reset_button">Systemstandard verwenden</string>
+    <string name="alarm_settings_system_default">Systemstandard</string>
+    <string name="alarm_settings_system_default_with_name">Systemstandard (%1$s)</string>
+    <string name="alarm_settings_custom_tone">Eigener Alarmton</string>
+    <string name="alarm_settings_picker_unavailable">Auf diesem Gerät ist keine Ton-Auswahl verfügbar.</string>
+    <string name="alarm_settings_behavior_title">Aktuelles Verhalten</string>
+    <string name="alarm_settings_behavior_body">Der gewählte Ton wird global für jeden Alarm verwendet. Ton und Vibration starten gemeinsam. Die Snooze-Dauer bleibt pro Erinnerung einstellbar.</string>
 
     <string name="detail_title_edit">Medikament bearbeiten</string>
     <string name="detail_title_new">Neues Medikament</string>
@@ -87,7 +107,7 @@
     <string name="alarm_notif_title">💊 Zeit für deine Medikamente!</string>
     <string name="alarm_notif_text">Tippe um die Liste zu öffnen</string>
     <string name="alarm_notif_big_text">Es ist Zeit deine Medikamente einzunehmen.\nBitte überprüfe die Liste.</string>
-    <string name="alarm_action_all_taken">✅ Alle genommen</string>
+    <string name="alarm_action_all_taken">✅ Genommen</string>
     <string name="alarm_action_snooze">⏰ Snooze %1$dmin</string>
 
     <string name="service_channel_name">Medikamenten-Erinnerung</string>

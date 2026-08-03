@@ -39,8 +39,7 @@ object AlarmSoundManager {
 
         // --- Sound ---
         try {
-            val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+            val alarmUri = AlarmTonePreferences.getEffectiveAlarmToneUri(context)
 
             ringtone = RingtoneManager.getRingtone(context.applicationContext, alarmUri)?.apply {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -55,6 +54,28 @@ object AlarmSoundManager {
                         .build()
                 }
                 play()
+            }
+
+            if (ringtone == null) {
+                Log.w("AlarmSoundManager", "Selected alarm tone unavailable, trying system fallback")
+                val fallbackUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                    ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+
+                ringtone = fallbackUri?.let { uri ->
+                    RingtoneManager.getRingtone(context.applicationContext, uri)?.apply {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                            isLooping = true
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            audioAttributes = AudioAttributes.Builder()
+                                .setUsage(AudioAttributes.USAGE_ALARM)
+                                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                                .setLegacyStreamType(AudioManager.STREAM_ALARM)
+                                .build()
+                        }
+                        play()
+                    }
+                }
             }
         } catch (e: Exception) {
             Log.e("AlarmSoundManager", "Sound error: ${e.message}")
