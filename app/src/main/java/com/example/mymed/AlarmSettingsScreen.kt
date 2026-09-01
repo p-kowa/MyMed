@@ -53,6 +53,7 @@ fun AlarmSettingsScreen(
     val context = LocalContext.current
     var currentToneTitle by remember { mutableStateOf(AlarmTonePreferences.getCurrentToneTitle(context)) }
     var isUsingSystemDefault by remember { mutableStateOf(AlarmTonePreferences.isUsingSystemDefault(context)) }
+    var autoSnoozeSeconds by remember { mutableStateOf(SnoozeManager.getAutoSnoozeSeconds(context)) }
 
     val ringtonePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -164,7 +165,30 @@ fun AlarmSettingsScreen(
                     },
                     title = stringResource(R.string.alarm_settings_behavior_title),
                     body = stringResource(R.string.alarm_settings_behavior_body)
-                )
+                ) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(R.string.alarm_settings_auto_snooze_label),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SnoozeManager.AUTO_SNOOZE_SECONDS_OPTIONS.forEach { option ->
+                            val selected = autoSnoozeSeconds == option
+                            OutlinedButton(
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = {
+                                    SnoozeManager.setAutoSnoozeSeconds(context, option)
+                                    autoSnoozeSeconds = SnoozeManager.getAutoSnoozeSeconds(context)
+                                }
+                            ) {
+                                val suffix = if (selected) " \u2713" else ""
+                                Text("${option}s$suffix")
+                            }
+                        }
+                    }
+                }
             }
         }
     }

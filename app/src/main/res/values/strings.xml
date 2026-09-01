@@ -50,6 +50,7 @@
     <string name="alarm_settings_picker_unavailable">No ringtone picker is available on this device.</string>
     <string name="alarm_settings_behavior_title">Current behavior</string>
     <string name="alarm_settings_behavior_body">The selected tone is used globally for every alarm. Sound playback and vibration start together. Snooze duration remains configurable per reminder.</string>
+    <string name="alarm_settings_auto_snooze_label">Auto-snooze if no action is pressed:</string>
 
     <string name="detail_title_edit">Edit medication</string>
     <string name="detail_title_new">New medication</string>

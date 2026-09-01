@@ -6,6 +6,8 @@ import android.media.AudioManager
 import android.media.Ringtone
 import android.media.RingtoneManager
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -27,6 +29,8 @@ object AlarmSoundManager {
     private var ringtone: Ringtone? = null
     private var vibrator: Vibrator? = null
     private var isPlaying = false
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var autoSnoozeRunnable: Runnable? = null
 
     /**
      * Starts the alarm (sound + vibration).
@@ -83,12 +87,15 @@ object AlarmSoundManager {
 
         // --- Repeating vibration ---
         startVibration(context)
+
+        scheduleAutoSnooze(context.applicationContext)
     }
 
     /**
      * Stops the alarm (sound + vibration).
      */
     fun stop(context: Context) {
+        cancelAutoSnooze()
         if (!isPlaying) return
         isPlaying = false
         Log.d("AlarmSoundManager", "Alarm stopped")
@@ -139,6 +146,25 @@ object AlarmSoundManager {
         } catch (e: Exception) {
             Log.e("AlarmSoundManager", "Vibration stop error: ${e.message}")
         }
+    }
+
+    private fun scheduleAutoSnooze(appContext: Context) {
+        cancelAutoSnooze()
+        val timeoutMs = SnoozeManager.getAutoSnoozeSeconds(appContext) * 1_000L
+        autoSnoozeRunnable = Runnable {
+            if (!isPlaying) return@Runnable
+
+            Log.d("AlarmSoundManager", "Auto-snooze after ${timeoutMs}ms")
+            SnoozeManager.snooze(appContext)
+            stop(appContext)
+            AlarmNotificationManager.dismissAlarmNotification(appContext)
+        }
+        mainHandler.postDelayed(autoSnoozeRunnable!!, timeoutMs)
+    }
+
+    private fun cancelAutoSnooze() {
+        autoSnoozeRunnable?.let { mainHandler.removeCallbacks(it) }
+        autoSnoozeRunnable = null
     }
 }
 

@@ -20,20 +20,35 @@ object SnoozeManager {
 
     // --- Constants: default values ---
     const val DEFAULT_SNOOZE_MINUTES = 10
+    const val DEFAULT_AUTO_SNOOZE_SECONDS = 25
     private const val SNOOZE_ALARM_ID = 9999  // Unique ID for the snooze alarm
 
     // SharedPreferences keys
     private const val PREFS_NAME = "mymed_snooze_prefs"
     private const val KEY_CURRENT_SNOOZE_MINUTES = "current_snooze_minutes"
+    private const val KEY_AUTO_SNOOZE_SECONDS = "auto_snooze_seconds"
 
     // Available snooze durations (minutes) for UI selection while creating reminders
     val SNOOZE_OPTIONS = listOf(5, 10, 15, 20, 30)
+    val AUTO_SNOOZE_SECONDS_OPTIONS = listOf(20, 25, 30)
 
     private fun prefs(context: Context): SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     fun getCurrentSnoozeMinutes(context: Context): Int =
         prefs(context).getInt(KEY_CURRENT_SNOOZE_MINUTES, DEFAULT_SNOOZE_MINUTES)
+
+    fun getAutoSnoozeSeconds(context: Context): Int {
+        val saved = prefs(context).getInt(KEY_AUTO_SNOOZE_SECONDS, DEFAULT_AUTO_SNOOZE_SECONDS)
+        return if (saved in AUTO_SNOOZE_SECONDS_OPTIONS) saved else DEFAULT_AUTO_SNOOZE_SECONDS
+    }
+
+    fun setAutoSnoozeSeconds(context: Context, seconds: Int) {
+        if (seconds !in AUTO_SNOOZE_SECONDS_OPTIONS) return
+        prefs(context).edit()
+            .putInt(KEY_AUTO_SNOOZE_SECONDS, seconds)
+            .apply()
+    }
 
     /**
      * Called when a NEW regular alarm fires (not a snooze alarm).
